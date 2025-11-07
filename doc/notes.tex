@@ -1,0 +1,83 @@
+We aim to compute the Hessian action in a direction $\tilde{p}$ for an objective function $J(u,p)$ constrained by a partial differential equation $F(u,p) = 0$, where $u$ is the state variable and $p$ is the parameter we wish to optimize. The state variable $u$ depends on the parameter $p$ through the pde constraint. 
+
+\subsection{Forward Pass}
+Our goal is to compute the objective:
+\begin{equation}
+    J(u(p),p)
+\end{equation}
+Firstly, we must solve the \textcolor{blue}{\textbf{state equation}} for $u$ given $p$:
+\begin{equation}
+   \color{blue}{ F(u,p) = 0.}
+\end{equation}
+Them, we can substitute this into the objective function $J(u,p)$.
+
+\subsection{Adjoint Pass}
+Next, our goal is to compute the gradient $\frac{d}{dp}J(u(p),p)$. Using the chain rule, we have:
+\begin{equation}
+    \frac{d}{dp}J(u(p),p) = \frac{\partial J}{\partial p}(u,p) + \frac{\partial J}{\partial u}(u,p) \frac{du}{dp}.
+\end{equation}
+We can easily compute the partial derivatives $\frac{\partial J}{\partial p}(u,p)$ and $\frac{\partial J}{\partial u}(u,p)$, but we also need to compute the term $\frac{du}{dp}$. To obtain this, we rely on the implicit function theorem by differentiating the pde constraint $F(u,p) = 0$ with respect to $p$:
+\begin{equation}
+    \frac{\partial F}{\partial u}(u,p) \frac{du}{dp} + \frac{\partial F}{\partial p}(u,p) = 0,          
+\end{equation}
+which gives
+\begin{equation}
+    \frac{du}{dp} = - \left(\frac{\partial F}{\partial u}(u,p)\right)^{-1} \frac{\partial F}{\partial p}(u,p).
+\end{equation}
+Substituting this into the gradient expression, we have:
+\begin{equation}    
+    \frac{d}{dp}J(u(p),p) = \frac{\partial J}{\partial p}(u,p) - \frac{\partial J}{\partial u}(u,p) \left(\frac{\partial F}{\partial u}(u,p)\right)^{-1} \frac{\partial F}{\partial p}(u,p).
+\end{equation}
+To avoid computing the inverse of $\frac{\partial F}{\partial u}(u,p)$ or solving a linear system for each component of the gradient, we introduce the adjoint variable $\lambda$ defined as the solution to the \textcolor{blue}{\textbf{adjoint equation}}:
+\begin{equation}
+    \color{blue}{\left(\frac{\partial F}{\partial u}(u,p)\right)^T \lambda = - \left(\frac{\partial J}{\partial u}(u,p)\right)^T.}
+\end{equation}
+With this, we can express the gradient as:
+\begin{equation}
+    \frac{d}{dp}J(u(p),p) = \frac{\partial J}{\partial p}(u,p) + \lambda^T \frac{\partial F}{\partial p}(u,p).
+\end{equation}
+
+\subsection{Hessian action}
+Finally, we want to compute the Hessian action $H(p)(\tilde{p})$. We start by differentiating the gradient expression with respect to $p$ in the direction $\tilde{p}$:
+\begin{equation}
+        H(p)(\tilde{p}) = \frac{d}{d\epsilon}\left(\frac{d}{dp}J(u(p+\tilde{p}),p+\epsilon \tilde{p})\right)\Bigg\vert_{\epsilon=0}.
+\end{equation}
+The finite dimensional representation of the Hessian action is given by:
+\begin{equation}
+    H(p)(\tilde{p}) = \frac{d}{dp}\left(\frac{d}{dp}J(u(p),p)\right)\tilde{p}.
+\end{equation}.
+Considering directions $\tilde{u}$ and $\tilde{\lambda}$ associated with $\tilde{p}$, we can expand this using the chain rule:
+\begin{equation}
+    H(p)(\tilde{p}) = \frac{\partial}{\partial p} \left(\frac{d}{dp}J(u,p)\right)\tilde{p} + \frac{\partial}{\partial u} \left(\frac{d}{dp}J(u,p)\right)\tilde{u} + \frac{\partial}{\partial \lambda} \left(\frac{d}{dp}J(u,p)\right)\tilde{\lambda}.
+\end{equation}
+Using our previous expression for the gradient, we can write the Hessian action as:
+\begin{equation}\begin{aligned}
+    H(p)(\tilde{p}) = 
+    &\frac{\partial}{\partial p} \left(\frac{\partial J}{\partial p}(u,p)\right)\tilde{p} +\frac{\partial}{\partial u} \left(\frac{\partial J}{\partial p}(u,p)\right)\tilde{u} \\
+    &+ \tilde{\lambda}^T \frac{\partial F}{\partial p}(u,p) + \lambda^T \frac{\partial}{\partial p}\left(\frac{\partial F}{\partial p}(u,p)\right)\tilde{p} + \lambda^T \frac{\partial}{\partial u}\left(\frac{\partial F}{\partial p}(u,p)\right)\tilde{u}.
+    \end{aligned}
+\end{equation}
+To compute this, we need to determine $\tilde{u}$ and $\tilde{\lambda}$. We find $\tilde{u}$ by differentiating the pde constraint $F(u,p) = 0$ with respect to $p$ in the direction $\tilde{p}$:
+\begin{equation}
+    \frac{\partial F}{\partial u}(u,p) \tilde{u} + \frac{\partial F}{\partial p}(u,p) \tilde{p} = 0,
+\end{equation}
+which requires solving the \textcolor{blue}{\textbf{incremental state equation}}:
+\begin{equation}
+    \color{blue}{\left(\frac{\partial F}{\partial u}(u,p)\right) \tilde{u} = - \frac{\partial F}{\partial p}(u,p) \tilde{p}.}
+\end{equation}
+Next, we find $\tilde{\lambda}$ by differentiating the adjoint equation with respect to $p$ in the direction $\tilde{p}$:
+\begin{equation}\begin{aligned}
+    &\left(\frac{\partial F}{\partial u}(u,p)\right)^T \tilde{\lambda} + \left(\frac{\partial}{\partial p}\left(\frac{\partial F}{\partial u}(u,p)\right)\tilde{p}\right)^T \lambda + \left(\frac{\partial}{\partial u}\left(\frac{\partial F}{\partial u}(u,p)\right)\tilde{u}\right)^T \lambda \\
+    &= - \left(\frac{\partial}{\partial p}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{p}\right)^T - \left(\frac{\partial}{\partial u}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{u}\right)^T.
+    \end{aligned}
+\end{equation}
+Which gives the \textcolor{blue}{\textbf{incremental adjoint equation}} to solve for $\tilde{\lambda}$:
+\color{blue}{
+\begin{equation}\begin{aligned}
+    \left(\frac{\partial F}{\partial u}(u,p)\right)^T \tilde{\lambda} = 
+    &- \left(\frac{\partial}{\partial p}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{p}\right)^T - \left(\frac{\partial}{\partial u}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{u}\right)^T 
+    \\
+    &- \left(\frac{\partial}{\partial p}\left(\frac{\partial F}{\partial u}(u,p)\right)\tilde{p}\right)^T \lambda - \left(\frac{\partial}{\partial u}\left(\frac{\partial F}{\partial u}(u,p)\right)\tilde{u}\right)^T \lambda.
+    \end{aligned}
+\end{equation}
+}
