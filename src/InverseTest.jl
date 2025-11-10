@@ -75,8 +75,6 @@ ṗh = FEFunction(V_φ,ṗ)
 ###### incremental equation (ṗ-u̇)
 ######
 
-@show uh.free_values
-
 # RHS: 
 dv = get_fe_basis(V)
 ∂R∂φ = Gridap.jacobian(φ->res(uh,dv,φ),φh)
@@ -90,8 +88,6 @@ dv = get_fe_basis(V)
 # solving  
 u̇ = ∂R∂u_mat \ (-∂R∂u_mat_ṗ)
 
-
-
 ###### TESTING
 function p_to_u(p)
     ph = FEFunction(V_φ,[p])
@@ -104,9 +100,6 @@ end
 ∂u_∂p_FD_ṗ = ∂u_∂p_FD .* ṗ
 
 @test u̇ ≈ ∂u_∂p_FD_ṗ rtol = 1e-4
-
-# wewwww test passes
-
 
 ######
 ###### u̇ -> J̇
@@ -170,6 +163,9 @@ dφ_ = get_trial_fe_basis(V_φ)
 @test ∂2J∂φ∂u_matrix_analytical ≈ ∂2J∂φ∂u_mat
 @test ∂2J∂φ∂u_matrix_analytical * u̇ ≈ ∂2J∂φ∂u_mat_u̇
 
+dṗ = ∂2J∂φ2_mat_ṗ + ∂2J∂φ∂u_mat_u̇
+du̇ = ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ
+
 ######
 ###### partials related to the state map
 ######
@@ -197,7 +193,6 @@ dφ_ = get_trial_fe_basis(V_φ)
 ∂2R∂φ∂u = Gridap.jacobian(uh->∂R∂φ_λ(uh,φh),uh)
 ∂2R∂φ∂u_mat = assemble_matrix(∂2R∂φ∂u,U,V_φ)
 ∂2R∂φ∂u_mat_u̇ = ∂2R∂φ∂u_mat * u̇
-
 
 ## TESTING
 # ∂²R / ∂u² * u̇ * λ
@@ -241,25 +236,9 @@ assem_adjoint = SparseMatrixAssembler(V,U)
 ∂R∂p_λ⁻ = Gridap.gradient(φh->res(uh,λ⁻h,φh),φh)
 ∂R∂p_mat_λ⁻ = assemble_vector(∂R∂p_λ⁻,V_φ)
 
+dṗ_adj = ∂R∂p_mat_λ⁻ - ∂2R∂φ2_mat_ṗ - ∂2R∂φ∂u_mat_u̇
 
-∂R∂p_mat_λ⁻ - ∂2R∂φ2_mat_ṗ - ∂2R∂φ∂u_mat_u̇
-
-
-
-# testing.... 
-# how do we test this... 
-# well we can 
-
-
-
-
-
-# what else can we do to debug this...
-
-
-
-
-
+#### testing
 
 u_val, u_pullback = rrule(state_map,φh)   # Compute functional and pull back
 function du_to_dφ(du)
@@ -267,45 +246,14 @@ function du_to_dφ(du)
     dφ_adj[1]
 end
 dφdu_fd = grad(central_fdm(5,1),du_to_dφ,u̇)[1]
-u̇_adj = ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ 
-ṗ_adj = dφdu_fd' * u̇_adj 
+#u̇_adj = ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ 
+dṗ_adj_fd = dφdu_fd' * du̇
 
+@test dṗ_adj[1] ≈ dṗ_adj_fd
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# the other way would be to finite difference the incremental state ? 
-
-
-
-
-
-
-
-
-
-
-
+###### 
 
 # Finally, the hessian action can then be computed as:
-
 
 ∂2J∂φ2_mat_ṗ
 ∂2J∂φ∂u_mat_u̇
@@ -313,14 +261,31 @@ ṗ_adj = dφdu_fd' * u̇_adj
 ∂2R∂φ2_mat_ṗ
 ∂2R∂φ∂u_mat_u̇
 
-Hṗ = ∂2J∂φ2_mat_ṗ + ∂2J∂φ∂u_mat_u̇ + ∂R∂p_mat_λ⁻ + ∂2R∂φ2_mat_ṗ + ∂2R∂φ∂u_mat_u̇
+Hṗ = ∂2J∂φ2_mat_ṗ + ∂2J∂φ∂u_mat_u̇ + dṗ_adj
+
+
+
+
 
 #end
 
 #Hṗ = hessian_action(u,p,λ,ṗ)
+
+
+# ive tested all the partials.... 
+
 H_fd = central_fdm(5,1)(p->Zygote.gradient(p_to_j,[p])[1][1],p[1])
 Hṗ_fd = H_fd * ṗ
 @test Hṗ ≈ Hṗ_fd 
+
+
+
+
+
+
+
+
+
 
 
 end
