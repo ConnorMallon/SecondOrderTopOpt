@@ -35,12 +35,14 @@ U = TrialFESpace(V,0.0)
 V_φ = TestFESpace(model,reffe_scalar;dirichlet_tags=["boundary"])
 
 f(x) = 1.0
-a(u,v,p) = ∫(p*∇(u)⋅∇(v))dΩ
-l(v,p) = ∫(f⋅v)dΩ
+# a(u,v,p) = ∫(p*∇(u)⋅∇(v))dΩ
+# l(v,p) = ∫(f⋅v)dΩ
+# state_map = AffineFEStateMap(a,l,U,V,V_φ)
+# res(u,v,p) = a(u,v,p) - l(v,p)
 
-state_map = AffineFEStateMap(a,l,U,V,V_φ)
 
-res(u,v,p) = a(u,v,p) - l(v,p)
+res(u,v,p) = ∫( (u+1)*p*∇(u)⋅∇(v) - f*v )dΩ
+state_map = NonlinearFEStateMap(res,U,V,V_φ)
 
 #u_data(x) = sin(pi*x[1])*sin(pi*x[2])
 #α= 1
@@ -135,9 +137,10 @@ u̇ = ∂R∂u_mat \ (-∂R∂u_mat_ṗ)
 ###### TESTING
 function p_to_u(p)
     ph = FEFunction(V_φ,[p])
-    op = AffineFEOperator((u,v)->a(u,v,ph),v->l(v,ph),U,V)
+    op = FEOperator((u,v)->res(u,v,ph),U,V)
     uh = solve(op)
     return uh.free_values
+    #state_map([p])
 end
 
 ∂u_∂p_FD = FiniteDifferences.central_fdm(5,1)(p_to_u,p[1])
