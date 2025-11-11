@@ -30,11 +30,11 @@ Substituting this into the gradient expression, we have:
 \end{equation}
 To avoid computing the inverse of $\frac{\partial F}{\partial u}(u,p)$ or solving a linear system for each component of the gradient, we introduce the adjoint variable $\lambda$ defined as the solution to the \textcolor{blue}{\textbf{adjoint equation}}:
 \begin{equation}
-    \color{blue}{\left(\frac{\partial F}{\partial u}(u,p)\right)^T \lambda = - \left(\frac{\partial J}{\partial u}(u,p)\right)^T.}
+    \color{blue}{\left(\frac{\partial F}{\partial u}(u,p)\right)^T \lambda =  \left(\frac{\partial J}{\partial u}(u,p)\right)^T.}
 \end{equation}
 With this, we can express the gradient as:
 \begin{equation}
-    \frac{d}{dp}J(u(p),p) = \frac{\partial J}{\partial p}(u,p) + \lambda^T \frac{\partial F}{\partial p}(u,p).
+    \frac{d}{dp}J(u(p),p) = \frac{\partial J}{\partial p}(u,p) - \lambda^T \frac{\partial F}{\partial p}(u,p).
 \end{equation}
 
 \subsection{Hessian action}
@@ -54,7 +54,7 @@ Using our previous expression for the gradient, we can write the Hessian action 
 \begin{equation}\begin{aligned}
     H(p)(\tilde{p}) = 
     &\frac{\partial}{\partial p} \left(\frac{\partial J}{\partial p}(u,p)\right)\tilde{p} +\frac{\partial}{\partial u} \left(\frac{\partial J}{\partial p}(u,p)\right)\tilde{u} \\
-    &+ \tilde{\lambda}^T \frac{\partial F}{\partial p}(u,p) + \lambda^T \frac{\partial}{\partial p}\left(\frac{\partial F}{\partial p}(u,p)\right)\tilde{p} + \lambda^T \frac{\partial}{\partial u}\left(\frac{\partial F}{\partial p}(u,p)\right)\tilde{u}.
+    &- \tilde{\lambda}^T \frac{\partial F}{\partial p}(u,p) - \lambda^T \frac{\partial}{\partial p}\left(\frac{\partial F}{\partial p}(u,p)\right)\tilde{p} - \lambda^T \frac{\partial}{\partial u}\left(\frac{\partial F}{\partial p}(u,p)\right)\tilde{u}.
     \end{aligned}
 \end{equation}
 To compute this, we need to determine $\tilde{u}$ and $\tilde{\lambda}$. We find $\tilde{u}$ by differentiating the pde constraint $F(u,p) = 0$ with respect to $p$ in the direction $\tilde{p}$:
@@ -68,14 +68,14 @@ which requires solving the \textcolor{blue}{\textbf{incremental state equation}}
 Next, we find $\tilde{\lambda}$ by differentiating the adjoint equation with respect to $p$ in the direction $\tilde{p}$:
 \begin{equation}\begin{aligned}
     &\left(\frac{\partial F}{\partial u}(u,p)\right)^T \tilde{\lambda} + \left(\frac{\partial}{\partial p}\left(\frac{\partial F}{\partial u}(u,p)\right)\tilde{p}\right)^T \lambda + \left(\frac{\partial}{\partial u}\left(\frac{\partial F}{\partial u}(u,p)\right)\tilde{u}\right)^T \lambda \\
-    &= - \left(\frac{\partial}{\partial p}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{p}\right)^T - \left(\frac{\partial}{\partial u}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{u}\right)^T.
+    &=  \left(\frac{\partial}{\partial p}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{p}\right)^T + \left(\frac{\partial}{\partial u}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{u}\right)^T.
     \end{aligned}
 \end{equation}
 Which gives the \textcolor{blue}{\textbf{incremental adjoint equation}} to solve for $\tilde{\lambda}$:
 \color{blue}{
 \begin{equation}\begin{aligned}
     \left(\frac{\partial F}{\partial u}(u,p)\right)^T \tilde{\lambda} = 
-    &- \left(\frac{\partial}{\partial p}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{p}\right)^T - \left(\frac{\partial}{\partial u}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{u}\right)^T 
+    & \left(\frac{\partial}{\partial p}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{p}\right)^T + \left(\frac{\partial}{\partial u}\left(\frac{\partial J}{\partial u}(u,p)\right)\tilde{u}\right)^T 
     \\
     &- \left(\frac{\partial}{\partial p}\left(\frac{\partial F}{\partial u}(u,p)\right)\tilde{p}\right)^T \lambda - \left(\frac{\partial}{\partial u}\left(\frac{\partial F}{\partial u}(u,p)\right)\tilde{u}\right)^T \lambda.
     \end{aligned}

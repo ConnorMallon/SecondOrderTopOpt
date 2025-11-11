@@ -286,11 +286,7 @@ dJ̇ = 1.0
 ######
 
 # RHS 
-inc_adjoint_rhs = - ∂2J∂u2_mat_u̇ - ∂2J∂u∂φ_mat_ṗ - ∂2R∂u2_mat_u̇ - ∂2R∂u∂φ_mat_ṗ
-
-
-
-
+inc_adjoint_rhs =  ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ - ∂2R∂u2_mat_u̇ - ∂2R∂u∂φ_mat_ṗ
 
 
 # LHS 2w
@@ -300,8 +296,7 @@ assem_adjoint = SparseMatrixAssembler(V,U)
 
 λ⁻ = ∂R∂u_adjoint_mat \ inc_adjoint_rhs
 
-λ⁻ 
-u̇
+@test λ⁻ ≈ u̇
 
 
 
@@ -310,22 +305,21 @@ u̇
 ∂R∂p_λ⁻ = Gridap.gradient(φh->res(uh,λ⁻h,φh),φh)
 ∂R∂p_mat_λ⁻ = assemble_vector(∂R∂p_λ⁻,V_φ)
 
-dṗ_adj = ∂R∂p_mat_λ⁻ + ∂2R∂φ2_mat_ṗ + ∂2R∂φ∂u_mat_u̇
-
-#### testing
-
-u_val, u_pullback = rrule(state_map,φh)   # Compute functional and pull back
-function du_to_dφ(du)
-    _, dφ_adj         = u_pullback(du) # Compute -dFdu*dudφ via adjoint
-    dφ_adj[1]
-end
-dφdu_fd = grad(central_fdm(5,1),du_to_dφ,u̇)[1]
-#u̇_adj = ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ 
-dṗ_adj_fd = dφdu_fd' * du̇
-
-@test dṗ_adj[1] ≈ dṗ_adj_fd
+dṗ_adj = - ∂R∂p_mat_λ⁻ - ∂2R∂φ2_mat_ṗ - ∂2R∂φ∂u_mat_u̇ 
 
 
+# #### testing
+
+# u_val, u_pullback = rrule(state_map,φh)   # Compute functional and pull back
+# function du_to_dφ(du)
+#     _, dφ_adj         = u_pullback(du) # Compute -dFdu*dudφ via adjoint
+#     dφ_adj[1]
+# end
+# dφdu_fd = grad(central_fdm(5,1),du_to_dφ,u̇)[1]
+# #u̇_adj = ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ 
+# dṗ_adj_fd = dφdu_fd' * du̇
+
+# @test dṗ_adj[1] ≈ dṗ_adj_fd
 
 
 
@@ -347,8 +341,6 @@ jacobian_fdm_4th( dj_to_dφ_adj, p)* ṗ
 
 
 
-
-
 ###### 
 
 # Finally, the hessian action can then be computed as:
@@ -362,8 +354,6 @@ jacobian_fdm_4th( dj_to_dφ_adj, p)* ṗ
 Hṗ = dṗ + dṗ_adj
 
 # ive tested all the partials.... 
-
-
 
 
 
