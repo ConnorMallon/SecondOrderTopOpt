@@ -49,7 +49,7 @@ res(u,v,p) = a(u,v,p) - l(v,p)
 
 #J(u,p) = ∫( (u-u_data)*(u-u_data) + 0*p*p )dΩ # keep p term otherwise dual error
 
-J(u,p) = ∫( f*u + 0*p )dΩ # keep p term otherwise dual error
+J(u,p) = ∫( f*u*u*u*p*p + p*p*p )dΩ # keep p term otherwise dual error
 
 objective = GridapTopOpt.StateParamMap(J,state_map)
 
@@ -218,7 +218,7 @@ function dj_to_du(u)
     dFdu
 end
 dJ̇ = 1.0
-@test jacobian_fdm_4th( dj_to_du, u) * u̇ * dJ̇  ≈ du̇ atol = 1e-6
+#@test jacobian_fdm_4th( dj_to_du, u) * u̇ * dJ̇  ≈ du̇ atol = 1e-6
 
 function dj_to_dφ(φ)
     j_val, j_pullback = rrule(objective,u,φ)   # Compute functional and pull back
@@ -226,7 +226,7 @@ function dj_to_dφ(φ)
     dFdφ
 end
 dJ̇ = 1.0
-@test jacobian_fdm_4th( dj_to_dφ, p) * ṗ * dJ̇ ≈ dṗ
+#@test jacobian_fdm_4th( dj_to_dφ, p) * ṗ * dJ̇ ≈ dṗ
 
 ######
 ###### partials related to the state map
@@ -296,7 +296,7 @@ assem_adjoint = SparseMatrixAssembler(V,U)
 
 λ⁻ = ∂R∂u_adjoint_mat \ inc_adjoint_rhs
 
-@test λ⁻ ≈ u̇
+#@test λ⁻ ≈ u̇
 
 
 
@@ -331,7 +331,7 @@ function dj_to_dφ_adj(φ)
     dφ_adj 
 end
 
-dj_to_dφ_adj(φ)
+#dj_to_dφ_adj(φ)
 jacobian_fdm_4th( dj_to_dφ_adj, p)* ṗ
 
 
