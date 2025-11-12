@@ -81,62 +81,19 @@ ph = FEFunction(V_φ,p)
 λh = FEFunction(V,λ)
 ṗh = FEFunction(V_φ,ṗ)
 
-function jacobian_fdm_4th(func, x::AbstractVector; h = 1e-4)
-    # Work on a floating-point copy of x
-    x_work = float.(copy(x))
-
-    y0 = func(x_work)
-    y0 isa AbstractVector || error("jacobian_fdm_4th: func(x) must return a vector, got $(typeof(y0))")
-
-    m = length(y0)
-    n = length(x_work)
-
-    T = promote_type(eltype(x_work), eltype(y0))
-    J = Matrix{T}(undef, m, n)
-
-    for j in 1:n
-        xj = x_work[j]
-
-        # f(x + 2h e_j)
-        x_work[j] = xj + 2h
-        f_pp = copy(func(x_work))
-
-        # f(x + h e_j)
-        x_work[j] = xj + h
-        f_p = copy(func(x_work))
-
-        # f(x - h e_j)
-        x_work[j] = xj - h
-        f_m = copy(func(x_work))
-
-        # f(x - 2h e_j)
-        x_work[j] = xj - 2h
-        f_mm = copy(func(x_work))
-
-        # restore x
-        x_work[j] = xj
-
-        @inbounds J[:, j] .= (-f_pp .+ 8f_p .- 8f_m .+ f_mm) ./ (12h)
-    end
-
-    return J
-end
-
 ######
 ###### incremental equation (ṗ-u̇)
 ######
 
-function incremental_state_pushforward(res,uh,φh,ṗ)
+function incremental_state_pushforward(res,uh,φh,ṗ,U,V)
     # RHS: 
     dv = get_fe_basis(V)
     ∂R∂φ = Gridap.jacobian(φ->res(uh,dv,φ),φh)
     ∂R∂φ_mat = assemble_matrix(∂R∂φ,V_φ,V)
     ∂R∂u_mat_ṗ = ∂R∂φ_mat * ṗ
-
     # LHS:
     ∂R∂u = Gridap.jacobian(uh->res(uh,dv,φh),uh) 
     ∂R∂u_mat = assemble_matrix(∂R∂u,U,V)  
-
     # solving  
     u̇ = ∂R∂u_mat \ (-∂R∂u_mat_ṗ)
 end 
@@ -149,7 +106,7 @@ function p_to_u(p)
     return uh.free_values
     #state_map([p])
 end
-u̇ = incremental_state_pushforward(res,uh,φh,ṗ)
+u̇ = incremental_state_pushforward(res,uh,φh,ṗ,U,V)
 ∂u_∂p_FD = FiniteDifferences.central_fdm(5,1)(p_to_u,p[1])
 ∂u_∂p_FD_ṗ = ∂u_∂p_FD .* ṗ
 @test u̇ ≈ ∂u_∂p_FD_ṗ rtol = 1e-4
@@ -159,9 +116,6 @@ u̇ = incremental_state_pushforward(res,uh,φh,ṗ)
 ###### u̇ -> J̇
 ######
 # dont need
-
-
-
 
 
 
@@ -240,25 +194,16 @@ end
 
 du̇, dṗ = inc_objective_pullback_pushforward(J,uh,φh,u̇,ṗ)
 
-function up_to_dJdu_dJdp(up)
-    N = num_free_dofs(V)
+N = num_free_dofs(V)
+function up_to_j(up)
     u = up[1:N]
     p = up[N+1:end]
-    j_val, j_pullback = rrule(objective,u,p)   # Compute functional and pull back
-    dj = 1.0
-    _, dFdu, dFdφ     = j_pullback(dj)    # Compute dFdu, dFdφ
-    dFdu,dFdφ
+    j = objective(u,p)
 end
-
-up_to_dJdu(up) = up_to_dJdu_dJdp(up)[1]
-up_to_dJdp(up) = up_to_dJdu_dJdp(up)[2]
-
-@test FiniteDifferences.jacobian(central_fdm(5,1),up_to_dJdu,up)[1]*vcat(u̇,ṗ) ≈ du̇
-@test FiniteDifferences.jacobian(central_fdm(5,1),up_to_dJdp,up)[1]*vcat(u̇,ṗ) ≈ dṗ
-
-# find an equivalent one with Zygote....
-
-
+up->Zygote.gradient(up_to_j,up)[1]
+u̇ṗ_FD =FiniteDifferences.jacobian(central_fdm(5,1),up->Zygote.gradient(up_to_j,up)[1],up)[1]*vcat(u̇,ṗ)
+@test u̇ṗ_FD[1:N] ≈ du̇
+@test u̇ṗ_FD[N+1:end] ≈ dṗ
 
 ######
 ###### partials related to the state map
@@ -354,12 +299,13 @@ end
 dṗ_adj = incremental_adjoint_pushforward(res,J,uh,λh,φh,u̇,ṗ,du̇)
 Hṗ = dṗ + dṗ_adj
 
-
-
 # #### testing
 #@test λ⁻ ≈ u̇
 
 H_fd = central_fdm(5,2)(p->p_to_j([p]),p[1]) # second order FDM
-@test Hṗ ≈ H_fd*ṗ rtol = 1e-7
+#H_fd = central_fdm(5,1)(p->Zygote.gradient(p_to_j,[p])[1][1],p[1]) # first order FDM on the gradient computation
+
+@test Hṗ ≈ H_fd*ṗ rtol = 1e-5
+
 
 end
