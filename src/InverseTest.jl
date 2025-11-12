@@ -16,6 +16,8 @@ using Gridap: writevtk
 using FiniteDifferences
 using ChainRulesCore
 
+using Zygote
+
 order = 1 
 xmax = ymax = 1.0
 dom = (0,xmax,0,ymax)
@@ -34,14 +36,13 @@ V = TestFESpace(model,reffe_scalar;dirichlet_tags=[1,2,3,4,5,6,7])
 U = TrialFESpace(V,0.0)
 V_φ = TestFESpace(model,reffe_scalar;dirichlet_tags=["boundary"])
 
-f(x) = 1.0
+f(x) = 1
 # a(u,v,p) = ∫(p*∇(u)⋅∇(v))dΩ
 # l(v,p) = ∫(f⋅v)dΩ
 # state_map = AffineFEStateMap(a,l,U,V,V_φ)
 # res(u,v,p) = a(u,v,p) - l(v,p)
 
-
-res(u,v,p) = ∫( (u+1)*p*∇(u)⋅∇(v) - f*v )dΩ
+res(u,v,p) = ∫( (u+1)*(p+cos∘(p))*∇(u)⋅∇(v) - f*v )dΩ
 state_map = NonlinearFEStateMap(res,U,V,V_φ)
 
 #u_data(x) = sin(pi*x[1])*sin(pi*x[2])
@@ -51,7 +52,9 @@ state_map = NonlinearFEStateMap(res,U,V,V_φ)
 
 #J(u,p) = ∫( (u-u_data)*(u-u_data) + 0*p*p )dΩ # keep p term otherwise dual error
 
-J(u,p) = ∫( f*u*u*u*p*p + p*p*p )dΩ # keep p term otherwise dual error
+J(u,p) = ∫( f*(1.0(sin∘(2π*u))+1)*(1.0(cos∘(2π*p))+1)*p)dΩ # keep p term otherwise dual error
+
+sum(J(uh,ph))
 
 objective = GridapTopOpt.StateParamMap(J,state_map)
 
@@ -60,14 +63,14 @@ function p_to_j(p)
     j = objective(u,p)
 end
 
-p = interpolate(20,V_φ).free_values
+p = interpolate(1,V_φ).free_values
 u = copy(state_map(p))
 
-using Zygote
-
 djdp = Zygote.gradient(p_to_j, p)[1]
+
+
 λ = state_map.cache.adj_cache[3]
-ṗ = djdp * 1e4# take as the first guess for the direction
+ṗ = djdp  # take as the first guess for the direction
 
 uh = FEFunction(U,u)
 ph = FEFunction(V_φ,p)
@@ -116,23 +119,24 @@ function jacobian_fdm_4th(func, x::AbstractVector; h = 1e-4)
     return J
 end
 
-
 ######
 ###### incremental equation (ṗ-u̇)
 ######
 
-# RHS: 
-dv = get_fe_basis(V)
-∂R∂φ = Gridap.jacobian(φ->res(uh,dv,φ),φh)
-∂R∂φ_mat = assemble_matrix(∂R∂φ,V_φ,V)
-∂R∂u_mat_ṗ = ∂R∂φ_mat * ṗ
+function incremental_state_pushforward(res,uh,φh,ṗ)
+    # RHS: 
+    dv = get_fe_basis(V)
+    ∂R∂φ = Gridap.jacobian(φ->res(uh,dv,φ),φh)
+    ∂R∂φ_mat = assemble_matrix(∂R∂φ,V_φ,V)
+    ∂R∂u_mat_ṗ = ∂R∂φ_mat * ṗ
 
-# LHS:
-∂R∂u = Gridap.jacobian(uh->res(uh,dv,φh),uh) 
-∂R∂u_mat = assemble_matrix(∂R∂u,U,V)  
+    # LHS:
+    ∂R∂u = Gridap.jacobian(uh->res(uh,dv,φh),uh) 
+    ∂R∂u_mat = assemble_matrix(∂R∂u,U,V)  
 
-# solving  
-u̇ = ∂R∂u_mat \ (-∂R∂u_mat_ṗ)
+    # solving  
+    u̇ = ∂R∂u_mat \ (-∂R∂u_mat_ṗ)
+end 
 
 ###### TESTING
 function p_to_u(p)
@@ -142,46 +146,62 @@ function p_to_u(p)
     return uh.free_values
     #state_map([p])
 end
-
+u̇ = incremental_state_pushforward(res,uh,φh,ṗ)
 ∂u_∂p_FD = FiniteDifferences.central_fdm(5,1)(p_to_u,p[1])
 ∂u_∂p_FD_ṗ = ∂u_∂p_FD .* ṗ
-
 @test u̇ ≈ ∂u_∂p_FD_ṗ rtol = 1e-4
+
 
 ######
 ###### u̇ -> J̇
 ######
 # dont need
 
+
+
+
+
+
 ######
 ###### directional derivate of the map dj-> du,dp in the direction (u̇,ṗ)
 ######
 # we need 
 
-# ∂²J / ∂u² * u̇
-∂2J∂u2 = Gridap.hessian(uh->J(uh,φh),uh)
-∂2J∂u2_mat = assemble_matrix(∂2J∂u2,V,V)
-∂2J∂u2_mat_u̇ = ∂2J∂u2_mat * u̇
+function objective_partials(J,uh,φh,u̇,ṗ)
+        # ∂²J / ∂u² * u̇
+    ∂2J∂u2 = Gridap.hessian(uh->J(uh,φh),uh)
+    ∂2J∂u2_mat = assemble_matrix(∂2J∂u2,V,V)
+    ∂2J∂u2_mat_u̇ = ∂2J∂u2_mat * u̇
 
-# ∂/∂p (∂J/∂u ) * ṗ
-∂J∂u(uh,φh) = Gridap.gradient(uh->J(uh,φh),uh)
-∂2J∂u∂φ = Gridap.jacobian(φ->∂J∂u(uh,φ),φh)
-∂2J∂u∂φ_mat = assemble_matrix(∂2J∂u∂φ,V_φ,V)
-∂2J∂u∂φ_mat_ṗ = ∂2J∂u∂φ_mat * ṗ
+    # ∂/∂p (∂J/∂u ) * ṗ
+    ∂J∂u(uh,φh) = Gridap.gradient(uh->J(uh,φh),uh)
+    ∂2J∂u∂φ = Gridap.jacobian(φ->∂J∂u(uh,φ),φh)
+    ∂2J∂u∂φ_mat = assemble_matrix(∂2J∂u∂φ,V_φ,V)
+    ∂2J∂u∂φ_mat_ṗ = ∂2J∂u∂φ_mat * ṗ
 
-# ∂²J / ∂p² * ṗ
-∂2J∂φ2 = Gridap.hessian(φ->J(uh,φ),φh)
-∂2J∂φ2_mat = assemble_matrix(∂2J∂φ2,V_φ,V_φ)
-∂2J∂φ2_mat_ṗ = ∂2J∂φ2_mat * ṗ
+    # ∂²J / ∂p² * ṗ
+    ∂2J∂φ2 = Gridap.hessian(φ->J(uh,φ),φh)
+    ∂2J∂φ2_mat = assemble_matrix(∂2J∂φ2,V_φ,V_φ)
+    ∂2J∂φ2_mat_ṗ = ∂2J∂φ2_mat * ṗ
 
-# ∂/∂u (∂J / ∂p) * u̇
-∂J∂φ(uh,φh) = Gridap.gradient(φ->J(uh,φ),φh)
-∂2J∂φ∂u = Gridap.jacobian(uh->∂J∂φ(uh,φh),uh)
-∂2J∂φ∂u_mat = assemble_matrix(∂2J∂φ∂u,U,V_φ)
-∂2J∂φ∂u_mat_u̇ = ∂2J∂φ∂u_mat * u̇
+    # ∂/∂u (∂J / ∂p) * u̇
+    ∂J∂φ(uh,φh) = Gridap.gradient(φ->J(uh,φ),φh)
+    ∂2J∂φ∂u = Gridap.jacobian(uh->∂J∂φ(uh,φh),uh)
+    ∂2J∂φ∂u_mat = assemble_matrix(∂2J∂φ∂u,U,V_φ)
+    ∂2J∂φ∂u_mat_u̇ = ∂2J∂φ∂u_mat * u̇
 
-dṗ = ∂2J∂φ2_mat_ṗ + ∂2J∂φ∂u_mat_u̇
-du̇ = ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ
+    return ∂2J∂u2_mat_u̇, ∂2J∂u∂φ_mat_ṗ, ∂2J∂φ2_mat_ṗ, ∂2J∂φ∂u_mat_u̇
+end
+
+function inc_objective_pullback_pushforward(J,uh,φh,u̇,ṗ)
+
+    ∂2J∂u2_mat_u̇, ∂2J∂u∂φ_mat_ṗ, ∂2J∂φ2_mat_ṗ, ∂2J∂φ∂u_mat_u̇ = objective_partials(J,uh,φh,u̇,ṗ)
+
+    dṗ = ∂2J∂φ2_mat_ṗ + ∂2J∂φ∂u_mat_u̇
+    du̇ = ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ
+
+    return du̇, dṗ
+end
 
 # ## Testing
 # # ∂²J / ∂u² * u̇
@@ -213,23 +233,37 @@ du̇ = ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ
 # @test ∂2J∂φ∂u_matrix_analytical ≈ ∂2J∂φ∂u_mat
 # @test ∂2J∂φ∂u_matrix_analytical * u̇ ≈ ∂2J∂φ∂u_mat_u̇
 
+###### TESTING
+
+du̇, dṗ = inc_objective_pullback_pushforward(J,uh,φh,u̇,ṗ)
+
 dj = 1.0
 function dj_to_du(u)
-    j_val, j_pullback = rrule(objective,u,φ)   # Compute functional and pull back
+    j_val, j_pullback = rrule(objective,u,p)   # Compute functional and pull back
     _, dFdu, dFdφ     = j_pullback(dj)    # Compute dFdu, dFdφ
     dFdu,dFdφ
     dFdu
 end
 dJ̇ = 1.0
-#@test jacobian_fdm_4th( dj_to_du, u) * u̇ * dJ̇  ≈ du̇ atol = 1e-6
+jacobian_fdm_4th( dj_to_du, u) * u̇ * dJ̇
+@test jacobian_fdm_4th( dj_to_du, u) * u̇ * dJ̇  ≈ du̇ 
 
-function dj_to_dφ(φ)
-    j_val, j_pullback = rrule(objective,u,φ)   # Compute functional and pull back
+
+
+
+#atol = 1e-6
+
+function dj_to_dφ(p)
+    j_val, j_pullback = rrule(objective,u,p)   # Compute functional and pull back
     _, dFdu, dFdφ     = j_pullback(dj)    # Compute dFdu, dFdφ
     dFdφ
 end
 dJ̇ = 1.0
-#@test jacobian_fdm_4th( dj_to_dφ, p) * ṗ * dJ̇ ≈ dṗ
+@test jacobian_fdm_4th( dj_to_dφ, p) * ṗ * dJ̇ ≈ dṗ rtol = 1e-6
+
+
+
+
 
 ######
 ###### partials related to the state map
@@ -237,27 +271,34 @@ dJ̇ = 1.0
 
 # differentiating the lhs of the adjoint equation: (for the partials we need for the incremental adjoint)
 
-# ∂²R / ∂u² * u̇ * λ
-∂2R∂u2 = Gridap.hessian(uh->res(uh,λh,φh),uh) 
-∂2R∂u2_mat = assemble_matrix(∂2R∂u2,U,V)  
-∂2R∂u2_mat_u̇ = ∂2R∂u2_mat * u̇
 
-# ∂/∂p (∂R/∂u * λ) * ṗ
-∂R∂u_λ(uh,φh) = Gridap.gradient(uh->res(uh,λh,φh),uh)
-∂2R∂u∂φ = Gridap.jacobian(φ->∂R∂u_λ(uh,φ),φh) 
-∂2R∂u∂φ_mat = assemble_matrix(∂2R∂u∂φ,V_φ,V)
-∂2R∂u∂φ_mat_ṗ = ∂2R∂u∂φ_mat * ṗ
+function incremental_adjoint_partials(res,uh,λh,φh,u̇,ṗ)
 
-# ∂²R / ∂p² * ṗ * λ
-∂2R∂φ2 = Gridap.hessian(φh->res(uh,λh,φh),φh)
-∂2R∂φ2_mat = assemble_matrix(∂2R∂φ2,V_φ,V_φ)
-∂2R∂φ2_mat_ṗ = ∂2R∂φ2_mat * ṗ
+    # ∂²R / ∂u² * u̇ * λ
+    ∂2R∂u2 = Gridap.hessian(uh->res(uh,λh,φh),uh) 
+    ∂2R∂u2_mat = assemble_matrix(∂2R∂u2,U,V)  
+    ∂2R∂u2_mat_u̇ = ∂2R∂u2_mat * u̇
 
-# ∂/∂u (∂R/∂p * λ) * ṗ
-∂R∂φ_λ(uh,φh) = Gridap.gradient(φh->res(uh,λh,φh),φh)
-∂2R∂φ∂u = Gridap.jacobian(uh->∂R∂φ_λ(uh,φh),uh)
-∂2R∂φ∂u_mat = assemble_matrix(∂2R∂φ∂u,U,V_φ)
-∂2R∂φ∂u_mat_u̇ = ∂2R∂φ∂u_mat * u̇
+    # ∂/∂p (∂R/∂u * λ) * ṗ
+    ∂R∂u_λ(uh,φh) = Gridap.gradient(uh->res(uh,λh,φh),uh)
+    ∂2R∂u∂φ = Gridap.jacobian(φ->∂R∂u_λ(uh,φ),φh) 
+    ∂2R∂u∂φ_mat = assemble_matrix(∂2R∂u∂φ,V_φ,V)
+    ∂2R∂u∂φ_mat_ṗ = ∂2R∂u∂φ_mat * ṗ
+
+    # ∂²R / ∂p² * ṗ * λ
+    ∂2R∂φ2 = Gridap.hessian(φh->res(uh,λh,φh),φh)
+    ∂2R∂φ2_mat = assemble_matrix(∂2R∂φ2,V_φ,V_φ)
+    ∂2R∂φ2_mat_ṗ = ∂2R∂φ2_mat * ṗ
+
+    # ∂/∂u (∂R/∂p * λ) * ṗ
+    ∂R∂φ_λ(uh,φh) = Gridap.gradient(φh->res(uh,λh,φh),φh)
+    ∂2R∂φ∂u = Gridap.jacobian(uh->∂R∂φ_λ(uh,φh),uh)
+    ∂2R∂φ∂u_mat = assemble_matrix(∂2R∂φ∂u,U,V_φ)
+    ∂2R∂φ∂u_mat_u̇ = ∂2R∂φ∂u_mat * u̇
+
+    return ∂2R∂u2_mat_u̇, ∂2R∂u∂φ_mat_ṗ, ∂2R∂φ2_mat_ṗ, ∂2R∂φ∂u_mat_u̇
+
+end
 
 # ## TESTING
 # # ∂²R / ∂u² * u̇ * λ
@@ -288,30 +329,46 @@ dJ̇ = 1.0
 ###### incremental adjoint equation
 ######
 
-# RHS 
-inc_adjoint_rhs =  ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ - ∂2R∂u2_mat_u̇ - ∂2R∂u∂φ_mat_ṗ
+function incremental_adjoint_value(res,J,uh,λh,φh,u̇,ṗ,du̇,∂2R∂u2_mat_u̇,∂2R∂u∂φ_mat_ṗ)
+
+    # RHS 
+    inc_adjoint_rhs =  du̇ - ∂2R∂u2_mat_u̇ - ∂2R∂u∂φ_mat_ṗ
+
+    # LHS 2w
+    assem_adjoint = SparseMatrixAssembler(V,U)
+    ∂R∂u_adjoint = (du,v) -> Gridap.jacobian(res,[uh,v,φh],1)
+    ∂R∂u_adjoint_mat = assemble_adjoint_matrix(∂R∂u_adjoint,assem_adjoint,U,V)
+
+    λ⁻ = ∂R∂u_adjoint_mat \ inc_adjoint_rhs
+
+    λ⁻h = FEFunction(V,λ⁻)
+end 
+
+function incremental_adjoint_pushforward(res,J,uh,λh,φh,u̇,ṗ,du̇)
+
+    ∂2R∂u2_mat_u̇, ∂2R∂u∂φ_mat_ṗ, ∂2R∂φ2_mat_ṗ, ∂2R∂φ∂u_mat_u̇ = incremental_adjoint_partials(res,uh,λh,φh,u̇,ṗ)
+
+    λ⁻h = incremental_adjoint_value(res,J,uh,λh,φh,u̇,ṗ,du̇,∂2R∂u2_mat_u̇,∂2R∂u∂φ_mat_ṗ)
+
+    ∂R∂p_λ⁻ = Gridap.gradient(φh->res(uh,λ⁻h,φh),φh)
+    ∂R∂p_mat_λ⁻ = assemble_vector(∂R∂p_λ⁻,V_φ)
+
+    dṗ_adj = - ∂R∂p_mat_λ⁻ - ∂2R∂φ2_mat_ṗ - ∂2R∂φ∂u_mat_u̇ 
+end
 
 
-# LHS 2w
-assem_adjoint = SparseMatrixAssembler(V,U)
-∂R∂u_adjoint = (du,v) -> Gridap.jacobian(res,[uh,v,φh],1)
-∂R∂u_adjoint_mat = assemble_adjoint_matrix(∂R∂u_adjoint,assem_adjoint,U,V)
+∂2R∂u2_mat_u̇, ∂2R∂u∂φ_mat_ṗ, ∂2R∂φ2_mat_ṗ, ∂2R∂φ∂u_mat_u̇ = incremental_adjoint_partials(res,uh,λh,φh,u̇,ṗ)
+λ⁻h = incremental_adjoint_value(res,J,uh,λh,φh,u̇,ṗ,du̇,∂2R∂u2_mat_u̇,∂2R∂u∂φ_mat_ṗ).free_values
 
-λ⁻ = ∂R∂u_adjoint_mat \ inc_adjoint_rhs
-
-#@test λ⁻ ≈ u̇
+dṗ_adj = incremental_adjoint_pushforward(res,J,uh,λh,φh,u̇,ṗ,du̇)
 
 
-
-
-λ⁻h = FEFunction(V,λ⁻)
-∂R∂p_λ⁻ = Gridap.gradient(φh->res(uh,λ⁻h,φh),φh)
-∂R∂p_mat_λ⁻ = assemble_vector(∂R∂p_λ⁻,V_φ)
-
-dṗ_adj = - ∂R∂p_mat_λ⁻ - ∂2R∂φ2_mat_ṗ - ∂2R∂φ∂u_mat_u̇ 
 
 
 # #### testing
+
+
+#@test λ⁻ ≈ u̇
 
 # u_val, u_pullback = rrule(state_map,φh)   # Compute functional and pull back
 # function du_to_dφ(du)
@@ -323,8 +380,6 @@ dṗ_adj = - ∂R∂p_mat_λ⁻ - ∂2R∂φ2_mat_ṗ - ∂2R∂φ∂u_mat_u̇
 # dṗ_adj_fd = dφdu_fd' * du̇
 
 # @test dṗ_adj[1] ≈ dṗ_adj_fd
-
-
 
 function dj_to_dφ_adj(φ)
     u, u_pullback = rrule(state_map,φ)
@@ -340,27 +395,21 @@ jacobian_fdm_4th( dj_to_dφ_adj, p)* ṗ
 
 
 
-# self adjoint problem? 
-
 
 
 ###### 
 
 # Finally, the hessian action can then be computed as:
 
-∂2J∂φ2_mat_ṗ
-∂2J∂φ∂u_mat_u̇
-∂R∂p_mat_λ⁻
-∂2R∂φ2_mat_ṗ
-∂2R∂φ∂u_mat_u̇
+# ∂2J∂φ2_mat_ṗ
+# ∂2J∂φ∂u_mat_u̇
+# ∂R∂p_mat_λ⁻
+# ∂2R∂φ2_mat_ṗ
+# ∂2R∂φ∂u_mat_u̇
 
 Hṗ = dṗ + dṗ_adj
 
-# ive tested all the partials.... 
-
-
-
-
+# Testing entire hessian action via fdm
 function p_to_dp(φ)
     u, u_pullback = rrule(state_map,φ)
     j_val, j_pullback = rrule(objective,u,φ)   # Compute functional and pull back
@@ -369,38 +418,10 @@ function p_to_dp(φ)
     dφ_adj + dFdφ
 end
 
-grad(central_fdm(5,1),p_to_dp,p)
 jacobian_fdm_4th(p_to_dp, p)* ṗ
-
-
-
-
-
-
-
-j_val, j_pullback = rrule(objective,uh,φh)   # Compute functional and pull back
-
-function dj_to_du(dj)
-    _, dFdu, dFdφ     = j_pullback(dj)    # Compute dFdu, dFdφ
-    dFdu,dFdφ
-    dFdu
-end
-
-dj_to_du(1.0)
-central_fdm(5,1)(dj_to_du,1.0)
-
-
 
 H_fd = central_fdm(5,1)(p->Zygote.gradient(p_to_j,[p])[1][1],p[1])
 Hṗ_fd = H_fd * ṗ
 @test Hṗ ≈ Hṗ_fd 
-
-
-
-
-
-
-
-
 
 end
