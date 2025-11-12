@@ -53,6 +53,9 @@ state_map = NonlinearFEStateMap(res,U,V,V_φ)
 #J(u,p) = ∫( (u-u_data)*(u-u_data) + 0*p*p )dΩ # keep p term otherwise dual error
 
 J(u,p) = ∫( f*(1.0(sin∘(2π*u))+1)*(1.0(cos∘(2π*p))+1)*p)dΩ # keep p term otherwise dual error
+#J(u,p) = ∫( 1e2*p*u*u )dΩ # keep p term otherwise dual error
+
+
 
 sum(J(uh,ph))
 
@@ -237,31 +240,23 @@ end
 
 du̇, dṗ = inc_objective_pullback_pushforward(J,uh,φh,u̇,ṗ)
 
-dj = 1.0
-function dj_to_du(u)
+function up_to_dJdu_dJdp(up)
+    N = num_free_dofs(V)
+    u = up[1:N]
+    p = up[N+1:end]
     j_val, j_pullback = rrule(objective,u,p)   # Compute functional and pull back
+    dj = 1.0
     _, dFdu, dFdφ     = j_pullback(dj)    # Compute dFdu, dFdφ
     dFdu,dFdφ
-    dFdu
 end
-dJ̇ = 1.0
-jacobian_fdm_4th( dj_to_du, u) * u̇ * dJ̇
-@test jacobian_fdm_4th( dj_to_du, u) * u̇ * dJ̇  ≈ du̇ 
 
+up_to_dJdu(up) = up_to_dJdu_dJdp(up)[1]
+up_to_dJdp(up) = up_to_dJdu_dJdp(up)[2]
 
+@test FiniteDifferences.jacobian(central_fdm(5,1),up_to_dJdu,up)[1]*vcat(u̇,ṗ) ≈ du̇
+@test FiniteDifferences.jacobian(central_fdm(5,1),up_to_dJdp,up)[1]*vcat(u̇,ṗ) ≈ dṗ
 
-
-#atol = 1e-6
-
-function dj_to_dφ(p)
-    j_val, j_pullback = rrule(objective,u,p)   # Compute functional and pull back
-    _, dFdu, dFdφ     = j_pullback(dj)    # Compute dFdu, dFdφ
-    dFdφ
-end
-dJ̇ = 1.0
-@test jacobian_fdm_4th( dj_to_dφ, p) * ṗ * dJ̇ ≈ dṗ rtol = 1e-6
-
-
+# find an equivalent one with Zygote....
 
 
 
@@ -364,7 +359,6 @@ dṗ_adj = incremental_adjoint_pushforward(res,J,uh,λh,φh,u̇,ṗ,du̇)
 
 
 
-
 # #### testing
 
 
@@ -407,6 +401,9 @@ jacobian_fdm_4th( dj_to_dφ_adj, p)* ṗ
 # ∂2R∂φ2_mat_ṗ
 # ∂2R∂φ∂u_mat_u̇
 
+dṗ
+
+dṗ_adj
 Hṗ = dṗ + dṗ_adj
 
 # Testing entire hessian action via fdm
