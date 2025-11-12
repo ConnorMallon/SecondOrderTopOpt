@@ -351,74 +351,15 @@ function incremental_adjoint_pushforward(res,J,uh,λh,φh,u̇,ṗ,du̇)
     dṗ_adj = - ∂R∂p_mat_λ⁻ - ∂2R∂φ2_mat_ṗ - ∂2R∂φ∂u_mat_u̇ 
 end
 
-
-∂2R∂u2_mat_u̇, ∂2R∂u∂φ_mat_ṗ, ∂2R∂φ2_mat_ṗ, ∂2R∂φ∂u_mat_u̇ = incremental_adjoint_partials(res,uh,λh,φh,u̇,ṗ)
-λ⁻h = incremental_adjoint_value(res,J,uh,λh,φh,u̇,ṗ,du̇,∂2R∂u2_mat_u̇,∂2R∂u∂φ_mat_ṗ).free_values
-
 dṗ_adj = incremental_adjoint_pushforward(res,J,uh,λh,φh,u̇,ṗ,du̇)
+Hṗ = dṗ + dṗ_adj
 
 
 
 # #### testing
-
-
 #@test λ⁻ ≈ u̇
 
-# u_val, u_pullback = rrule(state_map,φh)   # Compute functional and pull back
-# function du_to_dφ(du)
-#     _, dφ_adj         = u_pullback(du) # Compute -dFdu*dudφ via adjoint
-#     dφ_adj[1]
-# end
-# dφdu_fd = grad(central_fdm(5,1),du_to_dφ,u̇)[1]
-# #u̇_adj = ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ 
-# dṗ_adj_fd = dφdu_fd' * du̇
-
-# @test dṗ_adj[1] ≈ dṗ_adj_fd
-
-function dj_to_dφ_adj(φ)
-    u, u_pullback = rrule(state_map,φ)
-    j_val, j_pullback = rrule(objective,u,φ)   # Compute functional and pull back
-    _, dFdu, dFdφ     = j_pullback(dj)    # Compute dFdu, dFdφ
-    _, dφ_adj         = u_pullback(dFdu) # Compute -dFdu*dudφ via adjoint
-    dφ_adj 
-end
-
-#dj_to_dφ_adj(φ)
-jacobian_fdm_4th( dj_to_dφ_adj, p)* ṗ
-
-
-
-
-
-
-###### 
-
-# Finally, the hessian action can then be computed as:
-
-# ∂2J∂φ2_mat_ṗ
-# ∂2J∂φ∂u_mat_u̇
-# ∂R∂p_mat_λ⁻
-# ∂2R∂φ2_mat_ṗ
-# ∂2R∂φ∂u_mat_u̇
-
-dṗ
-
-dṗ_adj
-Hṗ = dṗ + dṗ_adj
-
-# Testing entire hessian action via fdm
-function p_to_dp(φ)
-    u, u_pullback = rrule(state_map,φ)
-    j_val, j_pullback = rrule(objective,u,φ)   # Compute functional and pull back
-    _, dFdu, dFdφ     = j_pullback(1)    # Compute dFdu, dFdφ
-    _, dφ_adj         = u_pullback(dFdu) # Compute -dFdu*dudφ via adjoint
-    dφ_adj + dFdφ
-end
-
-jacobian_fdm_4th(p_to_dp, p)* ṗ
-
-H_fd = central_fdm(5,1)(p->Zygote.gradient(p_to_j,[p])[1][1],p[1])
-Hṗ_fd = H_fd * ṗ
-@test Hṗ ≈ Hṗ_fd 
+H_fd = central_fdm(5,2)(p->p_to_j([p]),p[1]) # second order FDM
+@test Hṗ ≈ H_fd*ṗ rtol = 1e-7
 
 end
