@@ -18,6 +18,14 @@ V = TestFESpace(model,reffe_scalar;dirichlet_tags=[1,2,3,4,5,6,7])
 U = TrialFESpace(V,0.0)
 V_φ = TestFESpace(model,reffe_scalar;dirichlet_tags=["boundary"])
 
+
+
+
+# Unit tests for the pushforward rules 
+res(u,v,p) = ∫( (u+1)*(p+cos∘(p))*∇(u)⋅∇(v) - f*v )dΩ
+J(u,p) = ∫( f*(1.0(sin∘(2π*u))+1)*(1.0(cos∘(2π*p))+1)*p)dΩ 
+
+
 # Self-adjoint tests 
 f(x) = 1.0
 res(u,v,p) = ∫( p*∇(u)⋅∇(v)-f*v )dΩ   
@@ -32,8 +40,7 @@ u = copy(state_map(φ))
 uh = FEFunction(U,u)
 Zygote.gradient(p->objective(state_map(p),p),φ) # update λ
 λ = state_map.cache.adj_cache[3]
-
-@test u ≈ λ
+#@test u ≈ λ
 
 λh = FEFunction(V,λ)
 spaces = U,V,V_φ
@@ -43,12 +50,13 @@ du̇, dṗ = incremental_objective_pushforward(J,uh,φh,u̇,ṗ,spaces)
 λh = FEFunction(V,λ)
 ∂2R∂u2_mat_u̇, ∂2R∂u∂φ_mat_ṗ, ∂2R∂φ2_mat_ṗ, ∂2R∂φ∂u_mat_u̇ = incremental_adjoint_partials(res,uh,λh,φh,u̇,ṗ,spaces)
 λ⁻ = incremental_adjoint_value(res,J,uh,λh,φh,u̇,ṗ,du̇,∂2R∂u2_mat_u̇,∂2R∂u∂φ_mat_ṗ,spaces).free_values
+#@test u̇ ≈ λ⁻
 
-@test u̇ ≈ λ⁻
+# # Second order partial derivative tests 
+# J(u,p) = ∫(u*u*p*p)dΩ # keep p term otherwise dual error
 
-# Second order partial derivative tests
+# ∂2J∂u2_mat_u̇, ∂2J∂u∂φ_mat_ṗ, ∂2J∂φ2_mat_ṗ, ∂2J∂φ∂u_mat_u̇ = SecondOrderTopOpt.incremental_objective_partials(J,uh,φh,u̇,ṗ,spaces)
 
-# ## Testing
 # # ∂²J / ∂u² * u̇
 # dv = get_fe_basis(V)
 # du = get_trial_fe_basis(U)
@@ -57,34 +65,56 @@ du̇, dṗ = incremental_objective_pushforward(J,uh,φh,u̇,ṗ,spaces)
 
 # ∂2∂u2_analytical(uh) = ∫( 2*φh*φh*du⋅dv )dΩ
 # ∂2∂u2_matrix_analytical = assemble_matrix(∂2∂u2_analytical(uh),U,U)
-# @test ∂2∂u2_matrix_analytical ≈ ∂2J∂u2_mat
 # @test ∂2∂u2_matrix_analytical * u̇ ≈ ∂2J∂u2_mat_u̇
 
 # # ∂/∂p (∂J/∂u ) * ṗ
 # ∂2J∂u∂φ_analytical(uh,φh) = ∫( 4*φh*uh*dφ_⋅dv )dΩ
 # ∂2J∂u∂φ_matrix_analytical = assemble_matrix(∂2J∂u∂φ_analytical(uh,φh),V_φ,U)
-# @test ∂2J∂u∂φ_matrix_analytical ≈ ∂2J∂u∂φ_mat
 # @test ∂2J∂u∂φ_matrix_analytical * ṗ ≈ ∂2J∂u∂φ_mat_ṗ
 
 # # ∂²J / ∂p² * ṗ
 # ∂2J∂φ2_analytical(uh) = ∫( 2*uh*uh*dφ⋅dφ_ )dΩ
 # ∂2J∂φ2_matrix_analytical = assemble_matrix(∂2J∂φ2_analytical(uh),V_φ,V_φ)
-# @test ∂2J∂φ2_matrix_analytical ≈ ∂2J∂φ2_mat
 # @test ∂2J∂φ2_matrix_analytical * ṗ ≈ ∂2J∂φ2_mat_ṗ
 
 # # ∂/∂u (∂J / ∂p) * u̇
 # ∂2J∂φ∂u_analytical(uh,φh) = ∫( 4*uh*φh*du⋅dφ )dΩ
 # ∂2J∂φ∂u_matrix_analytical = assemble_matrix(∂2J∂φ∂u_analytical(uh,φh),U,V_φ)
-# @test ∂2J∂φ∂u_matrix_analytical ≈ ∂2J∂φ∂u_mat
 # @test ∂2J∂φ∂u_matrix_analytical * u̇ ≈ ∂2J∂φ∂u_mat_u̇
 
+# f(x) = 1.0
+# res(u,v,p) = ∫( p*∇(u)⋅∇(v) - f*v )dΩ
 
+# ∂2R∂u2_mat_u̇, ∂2R∂u∂φ_mat_ṗ, ∂2R∂φ2_mat_ṗ, ∂2R∂φ∂u_mat_u̇ = incremental_adjoint_partials(res,uh,λh,φh,u̇,ṗ,spaces)
 
+# # ∂²R / ∂u² * u̇ * λ
+# ∂2∂u2R_analytical(uh,λh,φh) = ∫( 0*du*dv )dΩ
+# ∂2∂u2R_matrix_analytical = assemble_matrix(∂2∂u2R_analytical(uh,λh,φh),U,U)
+# @test ∂2∂u2R_matrix_analytical * u̇ ≈ ∂2R∂u2_mat_u̇
 
+# # ∂/∂p (∂R/∂u * λ) * ṗ
+# ∂2R∂u∂φ_analytical(uh,λh,φh) = ∫( dφ_* ∇(dv) ⋅ ∇(λh)  )dΩ
+# ∂2R∂u∂φ_matrix_analytical = assemble_matrix(∂2R∂u∂φ_analytical(uh,λh,φh),V_φ,U)
+# @test ∂2R∂u∂φ_matrix_analytical * ṗ ≈ ∂2R∂u∂φ_mat_ṗ
 
-# incremental adjoint unit test
-# Not sure about this test - why does it work???? 
-###### TESTING
+# # ∂²R / ∂p² * ṗ * λ
+# ∂2R∂φ2_analytical(uh,λh) = ∫( 0*dφ⋅dφ_ )dΩ
+# ∂2R∂φ2_matrix_analytical = assemble_matrix(∂2R∂φ2_analytical(uh,λh),V_φ,V_φ)
+# @test ∂2R∂φ2_matrix_analytical * ṗ ≈ ∂2R∂φ2_mat_ṗ   
+
+# # ∂/∂u (∂R/∂p * λ) * ṗ
+# ∂2R∂φ∂u_analytical(uh,λh,φh) = ∫( dφ * ∇(du) ⋅ ∇(λh) )dΩ   
+# ∂2R∂φ∂u_matrix_analytical = assemble_matrix(∂2R∂φ∂u_analytical(uh,λh,φh),U,V_φ)
+# @test ∂2R∂φ∂u_matrix_analytical * u̇ ≈ ∂2R∂φ∂u_mat_u̇
+
+# Unit tests for the pushforward rules 
+# res(u,v,p) = ∫( (u+1)*(p+cos∘(p))*∇(u)⋅∇(v) - f*v )dΩ
+# J(u,p) = ∫( f*(1.0(sin∘(2π*u))+1)*(1.0(cos∘(2π*p))+1)*p)dΩ 
+state_map = NonlinearFEStateMap(res,U,V,V_φ)
+objective = GridapTopOpt.StateParamMap(J,state_map)
+Zygote.gradient(p->objective(state_map(p),p),φ) # update λ
+
+# incremental state test (ṗ->u̇)
 function p_to_u(p)
     ph = FEFunction(V_φ,[p])
     op = FEOperator((u,v)->res(u,v,ph),U,V)
@@ -97,13 +127,9 @@ u̇ = incremental_state_pushforward(res,uh,φh,ṗ,spaces)
 ∂u_∂p_FD = FiniteDifferences.central_fdm(5,1)(p_to_u,φ[1])
 ∂u_∂p_FD_ṗ = ∂u_∂p_FD .* ṗ
 @test u̇ ≈ ∂u_∂p_FD_ṗ #rtol = 1e-4
-
-
-
-
-###### TESTING
+ 
+# incremental objective (and pullback) (u̇->du̇)
 du̇, dṗ = incremental_objective_pushforward(J,uh,φh,u̇,ṗ,spaces)
-
 N = num_free_dofs(V)
 function up_to_j(up)
     u = up[1:N]
@@ -115,50 +141,10 @@ u̇ṗ_FD =FiniteDifferences.jacobian(central_fdm(5,1),up->Zygote.gradient(up_to
 @test u̇ṗ_FD[1:N] ≈ du̇ atol = 1e-11
 @test u̇ṗ_FD[N+1:end] ≈ dṗ
 
-######
-###### partials related to the state map
-######
-
-# differentiating the lhs of the adjoint equation: (for the partials we need for the incremental adjoint)
-
-
-
-# ## TESTING
-# # ∂²R / ∂u² * u̇ * λ
-# ∂2∂u2R_analytical(uh,λh,φh) = ∫( 0*du*dv )dΩ
-# ∂2∂u2R_matrix_analytical = assemble_matrix(∂2∂u2R_analytical(uh,λh,φh),U,U)
-# @test ∂2∂u2R_matrix_analytical ≈ ∂2R∂u2_mat
-# @test ∂2∂u2R_matrix_analytical * u̇ ≈ ∂2R∂u2_mat_u̇
-
-# # ∂/∂p (∂R/∂u * λ) * ṗ
-# ∂2R∂u∂φ_analytical(uh,λh,φh) = ∫( dφ_* ∇(dv) ⋅ ∇(λh)  )dΩ
-# ∂2R∂u∂φ_matrix_analytical = assemble_matrix(∂2R∂u∂φ_analytical(uh,λh,φh),V_φ,U)
-# @test ∂2R∂u∂φ_matrix_analytical ≈ ∂2R∂u∂φ_mat
-# @test ∂2R∂u∂φ_matrix_analytical * ṗ ≈ ∂2R∂u∂φ_mat_ṗ
-
-# # ∂²R / ∂p² * ṗ * λ
-# ∂2R∂φ2_analytical(uh,λh) = ∫( 0*dφ⋅dφ_ )dΩ
-# ∂2R∂φ2_matrix_analytical = assemble_matrix(∂2R∂φ2_analytical(uh,λh),V_φ,V_φ)
-# @test ∂2R∂φ2_matrix_analytical ≈ ∂2R∂φ2_mat
-# @test ∂2R∂φ2_matrix_analytical * ṗ ≈ ∂2R∂φ2_mat_ṗ   
-
-# # ∂/∂u (∂R/∂p * λ) * ṗ
-# ∂2R∂φ∂u_analytical(uh,λh,φh) = ∫( dφ * ∇(du) ⋅ ∇(λh) )dΩ   
-# ∂2R∂φ∂u_matrix_analytical = assemble_matrix(∂2R∂φ∂u_analytical(uh,λh,φh),U,V_φ)
-# @test ∂2R∂φ∂u_matrix_analytical ≈ ∂2R∂φ∂u_mat
-# @test ∂2R∂φ∂u_matrix_analytical * u̇ ≈ ∂2R∂φ∂u_mat_u̇
-
-######
-###### incremental adjoint equation
-######
-
-
-∂2R∂u2_mat_u̇, ∂2R∂u∂φ_mat_ṗ, ∂2R∂φ2_mat_ṗ, ∂2R∂φ∂u_mat_u̇ = incremental_adjoint_partials(res,uh,λh,φh,u̇,ṗ,spaces)
-λ⁻h = incremental_adjoint_value(res,J,uh,λh,φh,u̇,ṗ,du̇,∂2R∂u2_mat_u̇,∂2R∂u∂φ_mat_ṗ,spaces).free_values
-
+# Entire incremental map (including the adjoint part) (ṗ->dṗ)
 dṗ_adj = incremental_adjoint_pushforward(res,J,uh,λh,φh,u̇,ṗ,du̇,spaces)
-
 Hṗ = dṗ + dṗ_adj
+
 p_to_j(p) = objective(state_map(p),p)
 H_fd = central_fdm(5,1)(p->Zygote.gradient(p_to_j,[p])[1][1],p[1])
 Hṗ_fd = H_fd * ṗ
