@@ -102,21 +102,11 @@ res(u,v,p) = ∫( p*∇(u)⋅∇(v) - f*v )dΩ
 # Unit tests for the pushforward rules 
 res(u,v,p) = ∫( (u+1)*(p+cos∘(p))*∇(u)⋅∇(v) - f*v )dΩ
 J(u,p) = ∫( f*(1.0(sin∘(2π*u))+1)*(1.0(cos∘(2π*p))+1)*p)dΩ 
-
-state_map = NonlinearFEStateMap(res,U,V,V_φ)
-objective = GridapTopOpt.StateParamMap(J,state_map)
-ṗ = rand(num_free_dofs(V_φ))
-φ = rand(num_free_dofs(V_φ))
-p = φ
-φh = FEFunction(V_φ,φ)
 u = copy(state_map(φ))
 uh = FEFunction(U,u)
-Zygote.gradient(p->objective(state_map(p),p),φ) # update λ
-
-λh = FEFunction(V,λ)
-spaces = U,V,V_φ
 u̇ = incremental_state_pushforward(res,uh,φh,ṗ,spaces)
 du̇, dṗ = incremental_objective_pushforward(J,uh,φh,u̇,ṗ,spaces)
+Zygote.gradient(p->objective(state_map(p),p),φ) # update λ
 λ = state_map.cache.adj_cache[3]
 λh = FEFunction(V,λ)
 ∂2R∂u2_mat_u̇, ∂2R∂u∂φ_mat_ṗ, ∂2R∂φ2_mat_ṗ, ∂2R∂φ∂u_mat_u̇ = incremental_adjoint_partials(res,uh,λh,φh,u̇,ṗ,spaces)
@@ -129,12 +119,10 @@ function p_to_u(p)
     uh = solve(op)
     return uh.free_values
 end
-
-spaces = (U,V,V_φ)
 u̇ = incremental_state_pushforward(res,uh,φh,ṗ,spaces)
 ∂u_∂p_FD = FiniteDifferences.central_fdm(5,1)(p_to_u,φ[1])
 ∂u_∂p_FD_ṗ = ∂u_∂p_FD .* ṗ
-@test u̇ ≈ ∂u_∂p_FD_ṗ #rtol = 1e-4
+@test u̇ ≈ ∂u_∂p_FD_ṗ 
  
 # incremental objective (and pullback) (u̇->du̇)
 du̇, dṗ = incremental_objective_pushforward(J,uh,φh,u̇,ṗ,spaces)
@@ -149,7 +137,7 @@ u̇ṗ_FD =FiniteDifferences.jacobian(central_fdm(5,1),up->Zygote.gradient(up_to
 @test u̇ṗ_FD[1:N] ≈ du̇ atol = 1e-11
 @test u̇ṗ_FD[N+1:end] ≈ dṗ
 
-# Entire incremental map (including the adjoint part) (ṗ->dṗ)
+# entire incremental map (including the adjoint part) (ṗ->dṗ)
 dṗ_adj = incremental_adjoint_pushforward(res,J,uh,λh,φh,u̇,ṗ,du̇,spaces)
 Hṗ = dṗ + dṗ_adj
 
