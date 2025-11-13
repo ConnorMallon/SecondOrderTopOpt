@@ -8,7 +8,7 @@ include("HessianRules.jl")
 
 export incremental_state_pushforward
 export objective_partials
-export inc_objective_pullback_pushforward
+export incremental_objective_pushforward
 export incremental_adjoint_partials
 export incremental_adjoint_value
 export incremental_adjoint_pushforward

@@ -1,3 +1,7 @@
+#############################################################################
+# ṗ->u̇ : # Solving the "incremental state equation" ∂R/∂u * u̇ = - ∂R/∂p * ṗ #
+#############################################################################
+
 function incremental_state_pushforward(res,uh,φh,ṗ,spaces)
     U,V,V_φ = spaces 
 
@@ -15,7 +19,11 @@ function incremental_state_pushforward(res,uh,φh,ṗ,spaces)
     u̇ = ∂R∂u_mat \ (-∂R∂u_mat_ṗ)
 end 
 
-function objective_partials(J,uh,φh,u̇,ṗ,spaces )
+######################################################################
+# dJ̇ -> du̇, dṗ: Computing the increments of the objective functional #
+######################################################################
+
+function incremental_objective_partials(J,uh,φh,u̇,ṗ,spaces )
     U,V,V_φ = spaces
         # ∂²J / ∂u² * u̇
     ∂2J∂u2 = Gridap.hessian(uh->J(uh,φh),uh)
@@ -42,15 +50,18 @@ function objective_partials(J,uh,φh,u̇,ṗ,spaces )
     return ∂2J∂u2_mat_u̇, ∂2J∂u∂φ_mat_ṗ, ∂2J∂φ2_mat_ṗ, ∂2J∂φ∂u_mat_u̇
 end
 
-function inc_objective_pullback_pushforward(J,uh,φh,u̇,ṗ,spaces)
-
-    ∂2J∂u2_mat_u̇, ∂2J∂u∂φ_mat_ṗ, ∂2J∂φ2_mat_ṗ, ∂2J∂φ∂u_mat_u̇ = objective_partials(J,uh,φh,u̇,ṗ,spaces)
+function incremental_objective_pushforward(J,uh,φh,u̇,ṗ,spaces)
+    ∂2J∂u2_mat_u̇, ∂2J∂u∂φ_mat_ṗ, ∂2J∂φ2_mat_ṗ, ∂2J∂φ∂u_mat_u̇ = incremental_objective_partials(J,uh,φh,u̇,ṗ,spaces)
 
     dṗ = ∂2J∂φ2_mat_ṗ + ∂2J∂φ∂u_mat_u̇
     du̇ = ∂2J∂u2_mat_u̇ + ∂2J∂u∂φ_mat_ṗ
 
     return du̇, dṗ
 end
+
+################################################################################################################
+# du̇->dṗ : Solving the "incremental adjoint equation" ∂R/∂uᵗ * λ⁻ = du̇ - ∂²R/∂u² * u̇ * λ - ∂/∂p(∂R/∂u) * ṗ * λ #
+################################################################################################################  
 
 function incremental_adjoint_partials(res,uh,λh,φh,u̇,ṗ,spaces)
     U,V,V_φ = spaces
