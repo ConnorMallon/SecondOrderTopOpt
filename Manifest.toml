@@ -710,9 +710,7 @@ version = "0.6.1"
 
 [[deps.GridapTopOpt]]
 deps = ["BenchmarkTools", "BlockArrays", "ChainRulesCore", "CircularArrays", "DataStructures", "DelimitedFiles", "FillArrays", "FiniteDiff", "ForwardDiff", "Gridap", "GridapDistributed", "GridapEmbedded", "GridapGmsh", "GridapPETSc", "GridapSolvers", "JLD2", "LinearAlgebra", "MPI", "PartitionedArrays", "Printf", "ReverseDiff", "STLCutters", "SparseMatricesCSR", "Zygote"]
-git-tree-sha1 = "9a177882ff24bf9b7c3c75b57fb27237a2031ec9"
-repo-rev = "SecondOrderDiff"
-repo-url = "https://github.com/zjwegert/GridapTopOpt.jl.git"
+path = "/home/mallon2/Documents/GridapTopOpt.jl"
 uuid = "27dd0110-1916-4fd6-8b4b-1bc109db1170"
 version = "0.4.1"
 
