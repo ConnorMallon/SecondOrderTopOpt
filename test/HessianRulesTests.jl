@@ -106,6 +106,8 @@ spaces = (U,V,V_φ)
 # Unit tests for the pushforward rules 
 res(u,v,p) = ∫( (u+1)*(p+cos∘(p))*∇(u)⋅∇(v) - f*v )dΩ
 J(u,p) = ∫( f*(1.0(sin∘(2π*u))+1)*(1.0(cos∘(2π*p))+1)*p)dΩ 
+state_map = NonlinearFEStateMap(res,U,V,V_φ)
+objective = GridapTopOpt.StateParamMap(J,state_map)
 u = copy(state_map(φ))
 uh = FEFunction(U,u)
 u̇ = incremental_state_pushforward(state_map,ṗ)#res,uh,φh,ṗ,spaces)
@@ -152,5 +154,15 @@ p_to_j(p) = objective(state_map(p),p)
 H_fd = central_fdm(5,1)(p->Zygote.gradient(p_to_j,[p])[1][1],p[1])
 Hṗ_fd = H_fd * ṗ
 @test Hṗ ≈ Hṗ_fd 
+
+# try to pipe a dual through the maps.....
+
+
+
+
+
+
+
+
 
 end
