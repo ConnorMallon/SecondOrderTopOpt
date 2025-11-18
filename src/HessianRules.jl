@@ -68,6 +68,70 @@ function incremental_objective_pushforward(u_to_j,u̇,ṗ)
   return du̇, dṗ
 end
 
+function (u_to_j::StateParamMap)(u::Vector{ForwardDiff.Dual{T1,V1,P1}},p::Vector{ForwardDiff.Dual{T2,V2,P2}}) where {T1,V1,P1,T2,V2,P2}
+  F = u_to_j.F
+  uh = FEFunction(u_to_j.spaces[1],ForwardDiff.value.(u))
+  #uh = FEFunction(u_to_j.spaces[1],u)
+  ph = FEFunction(u_to_j.spaces[2],ForwardDiff.value.(p))
+  J = sum(F(uh,ph))
+  ∂F∂u = Gridap.gradient(uh->F(uh,ph),uh) 
+  ∂F∂u_vec = assemble_vector(∂F∂u,u_to_j.spaces[1])
+  ∂F∂p = Gridap.gradient(ph->F(uh,ph),ph)
+  ∂F∂p_vec = assemble_vector(∂F∂p,u_to_j.spaces[2])
+  u̇ = ForwardDiff.partials.(u)
+  ṗ = ForwardDiff.partials.(p)
+  J̇ = ∂F∂p_vec ⋅ ṗ + ∂F∂u_vec ⋅ u̇
+  return  ForwardDiff.Dual{T2}(J, J̇) # T is the tag
+end
+
+function ChainRulesCore.rrule(u_to_j::StateParamMap,u::Vector{ForwardDiff.Dual{T1,V1,P1}},p::Vector{ForwardDiff.Dual{T2,V2,P2}}) where {T1,V1,P1,T2,V2,P2}
+  spaces = u_to_j.spaces
+  F = u_to_j.F
+  uh = FEFunction(u_to_j.spaces[1],ForwardDiff.value.(u))
+  ph = FEFunction(u_to_j.spaces[2],ForwardDiff.value.(p))
+  J = sum(F(uh,ph))
+  ∂F∂u = Gridap.gradient(uh->F(uh,ph),uh) 
+  ∂F∂u_vec = assemble_vector(∂F∂u,u_to_j.spaces[1])
+  ∂F∂p = Gridap.gradient(ph->F(uh,ph),ph)
+  ∂F∂p_vec = assemble_vector(∂F∂p,u_to_j.spaces[2])
+  u̇ = ForwardDiff.partials.(u)
+  ṗ = ForwardDiff.partials.(p)
+  J̇ = ∂F∂p_vec ⋅ ṗ + ∂F∂u_vec ⋅ u̇
+
+  function u_to_j_pullback(DJ̇)
+    dJ = ForwardDiff.value(DJ̇)
+    ∂F∂u = Gridap.gradient(uh->F(uh,ph),uh) 
+    ∂F∂u_vec = assemble_vector(∂F∂u,u_to_j.spaces[1]) 
+    ∂F∂p = Gridap.gradient(ph->F(uh,ph),ph)
+    ∂F∂p_vec = assemble_vector(∂F∂p,u_to_j.spaces[2])
+    du = dJ * ∂F∂u_vec
+    dp = dJ * ∂F∂p_vec
+
+    dJ̇ = ForwardDiff.partials(DJ̇)
+    # once per outer iteration
+    ∂2J∂u2_mat, ∂2J∂u∂p_mat, ∂2J∂p2_mat, ∂2J∂p∂u_mat = incremental_objective_partials(F,uh,ph,spaces)
+    # once per inner iteration
+    # dṗ = dJ̇ .*( ∂2J∂p2_mat * ṗ + ∂2J∂p∂u_mat * u̇ )
+    # du̇ = dJ̇ .*( ∂2J∂u2_mat * u̇ + ∂2J∂u∂p_mat * ṗ )
+    dṗ = 1 .*( ∂2J∂p2_mat * ṗ + ∂2J∂p∂u_mat * u̇ )
+    du̇ = 1 .*( ∂2J∂u2_mat * u̇ + ∂2J∂u∂p_mat * ṗ )
+
+    @show dJ̇
+    @show du̇
+    @show dṗ
+    Du̇ = map(du, eachrow(du̇)) do v, p
+      ForwardDiff.Dual{T1}(v, p...)
+    end
+    Dṗ = map(dp, eachrow(dṗ)) do v, p
+      ForwardDiff.Dual{T2}(v, p...)
+    end
+    (  NoTangent(), Du̇, Dṗ )
+  end
+
+  return ForwardDiff.Dual{T2}(J, J̇), u_to_j_pullback
+end
+
+
 ################################################################################################################
 # du̇->dṗ : Solving the "incremental adjoint equation" ∂R/∂uᵗ * λ⁻ = du̇ - ∂²R/∂u² * u̇ * λ - ∂/∂p(∂R/∂u) * ṗ * λ #
 ################################################################################################################  
