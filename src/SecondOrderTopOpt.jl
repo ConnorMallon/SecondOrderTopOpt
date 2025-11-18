@@ -3,7 +3,7 @@ module SecondOrderTopOpt
 using Gridap
 using GridapTopOpt: assemble_adjoint_matrix
 using Gridap.Helpers, Gridap.Algebra, Gridap.TensorValues, Gridap.Geometry, Gridap.CellData, Gridap.Fields, Gridap.Arrays, Gridap.ReferenceFEs, Gridap.FESpaces,  Gridap.MultiField, Gridap.Polynomials
-using GridapTopOpt: get_state, get_parameter, StateParamMap
+using GridapTopOpt: get_state, get_parameter, StateParamMap, AbstractFEStateMap, NonlinearFEStateMap, get_plb_cache
 using ChainRulesCore
 using ForwardDiff
 

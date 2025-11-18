@@ -36,7 +36,7 @@ Zygote.gradient(p->objective(state_map(p),p),p) # update λ
 
 λh = FEFunction(V,λ)
 #spaces = U,V,V_p
-u̇ = incremental_state_pushforward(state_map,ṗ)#res,uh,ph,ṗ,spaces)
+u̇ = incremental_state_pushforward(state_map,ṗ,ph)#res,uh,ph,ṗ,spaces)
 du̇, dṗ = incremental_objective_pushforward(objective,u̇,ṗ)
 λ = state_map.cache.adj_cache[3]
 λh = FEFunction(V,λ)
@@ -110,7 +110,7 @@ state_map = NonlinearFEStateMap(res,U,V,V_p)
 objective = GridapTopOpt.StateParamMap(J,state_map)
 u = copy(state_map(p))
 uh = FEFunction(U,u)
-u̇ = incremental_state_pushforward(state_map,ṗ)#res,uh,ph,ṗ,spaces)
+u̇ = incremental_state_pushforward(state_map,ṗ,ph)#res,uh,ph,ṗ,spaces)
 du̇, dṗ = incremental_objective_pushforward(objective,u̇,ṗ)#J,uh,ph,u̇,ṗ,spaces)
 Zygote.gradient(p->objective(state_map(p),p),p) # update λ
 λ = state_map.cache.adj_cache[3]
@@ -126,7 +126,7 @@ function p_to_u(p)
     uh = solve(op)
     return uh.free_values
 end
-u̇ = incremental_state_pushforward(state_map,ṗ)
+u̇ = incremental_state_pushforward(state_map,ṗ,ph)
 ∂u_∂p_FD = FiniteDifferences.central_fdm(5,1)(p_to_u,p[1])
 ∂u_∂p_FD_ṗ = ∂u_∂p_FD .* ṗ
 @test u̇ ≈ ∂u_∂p_FD_ṗ 
