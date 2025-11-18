@@ -24,9 +24,8 @@ res(u,v,p) = ∫( p*∇(u)⋅∇(v)-f*v )dΩ
 J(u,p) = ∫( f*u + 0*p )dΩ
 state_map = NonlinearFEStateMap(res,U,V,V_p)
 objective = GridapTopOpt.StateParamMap(J,state_map)
-ṗ = rand(num_free_dofs(V_p))
-p = rand(num_free_dofs(V_p))
-p = p
+ṗ = [0.16337618888610783]
+p = [0.3253596201459815]
 ph = FEFunction(V_p,p)
 u = copy(state_map(p))
 uh = FEFunction(U,u)
@@ -104,7 +103,7 @@ spaces = (U,V,V_p)
 @test ∂2R∂p∂u_matrix_analytical ≈ ∂2R∂p∂u_mat
 
 # Unit tests for the pushforward rules 
-res(u,v,p) = ∫( (u+1)*(p+cos∘(p))*∇(u)⋅∇(v) - f*v )dΩ
+res(u,v,p) = ∫( (u+1)*(p)*∇(u)⋅∇(v) - f*v )dΩ
 J(u,p) = ∫( f*(1.0(sin∘(2π*u))+1)*(1.0(cos∘(2π*p))+1)*p)dΩ 
 state_map = NonlinearFEStateMap(res,U,V,V_p)
 objective = GridapTopOpt.StateParamMap(J,state_map)
@@ -149,12 +148,43 @@ u̇ṗ_FD =FiniteDifferences.jacobian(central_fdm(5,1),up->Zygote.gradient(up_to
 dṗ_adj = incremental_adjoint_pushforward(state_map,u̇,ṗ,du̇) 
 Hṗ = dṗ + dṗ_adj
 
-p_to_j(p) = objective(state_map(p),p)
-H_fd = central_fdm(5,1)(p->Zygote.gradient(p_to_j,[p])[1][1],p[1])
-Hṗ_fd = H_fd * ṗ
-@test Hṗ ≈ Hṗ_fd 
+function p_to_j(p)
+    ph = FEFunction(V_p,p)
+    op = FEOperator((u,v)->res(u,v,ph),U,V)
+    uh = solve(op)
+    sum(J(uh,ph))
+end
+H_fd = FiniteDifferences.jacobian(central_fdm(5,2),p_to_j,p)
+@test H_fd[1] * ṗ ≈ Hṗ
 
 # try to pipe a dual through the maps.....
+# with ForwardDiff 
+using ForwardDiff
+∇f = up->Zygote.gradient(up_to_j,up)[1]
+u̇ṗ = vcat(u̇,ṗ)
+du̇dṗ =  ForwardDiff.derivative(α -> ∇f(up + α*u̇ṗ), 0)
+@test du̇dṗ ≈ u̇ṗ_FD
 
+# check the incremental state with our forward pass:
+
+#pᵋ = ForwardDiff.Dual(p,ṗ)
+T = ForwardDiff.Tag(()->(),typeof(p))
+pᵋ = map(p, ṗ) do v, p
+    ForwardDiff.Dual{T}(v, p...)
+end
+uᵋ = state_map(pᵋ)
+ForwardDiff.value.(uᵋ) ≈ u
+vec(mapreduce(ForwardDiff.partials, hcat, uᵋ)) ≈ u̇
+
+# what else can we check with... 
+# we know partial calculation is correct...
+# can we get something else "along the way" 
+
+using ForwardDiff
+state_map(p)
+p_to_j(p) = objective((state_map(p)),p)
+∇f = p->Zygote.gradient(p_to_j,p)[1]
+dṗ =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
+@test dṗ ≈ Hṗ
 
 end
