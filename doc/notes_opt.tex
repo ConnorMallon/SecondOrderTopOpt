@@ -1,0 +1,46 @@
+\section{optimisation}
+
+We propose here an inexact CG-newton method using the ALM for constraint handling. 
+Consider first the taylor series expansion of a function \( f:\mathbb{R}^n \rightarrow \mathbb{R} \) around a point \( x_k \):
+\begin{equation}
+f(x_k + p_k)
+= f(x_k)
++ \nabla f(x_k)^{\top} p_k
++ \frac{1}{2} p_k^{\top} \nabla^{2} f(x_k) p_k
++ \mathcal{O}(\vert p_k \vert^{3}).
+\end{equation}
+Ignoring the $\mathcal{O}(\vert p_k \vert^{3})$ terms, we find $p_k$ that minimises this quadratic expression by setting its gradient with respect to $p_k$ to zero to obtain the Newton equation:
+\begin{equation}
+\nabla^{2} f(x_k) p_k = - \nabla f(x_k).
+\end{equation}
+To avoid forming the full hessian matrix, we use the CG method to iteratively solve this system, which instead only requires the hessian-vector product \( \nabla^{2} f(x_k) v \) for some vector \( v \). 
+We want to choose an appropriate forcing sequence $\eta_k$ to terminate the CG iterations when the residual \( r_k = \nabla^{2} f(x_k) p_k + \nabla f(x_k) \) satisfies:
+\begin{equation}
+\| r_k \|_2 \leq \eta_k \| \nabla f(x_k) \|_2.
+\end{equation}
+We use the choice: 
+\begin{equation}
+\eta_k = \min \left( 0.5, \sqrt{\Vert \nabla f(x_k) \Vert  } \right).
+\end{equation}
+We can prove (see e.g. \cite{nocedal2006numerical}) that choosing $\eta_k = O(\Vert \nabla f(x_k) \Vert)$ leads to linear convergence for the iterations:
+\begin{equation}
+    \Vert \nabla f(x_{k+1}) \Vert \leq C \Vert \nabla f(x_k) \Vert,
+\end{equation}
+and that choosing $\eta_k = O(\Vert \nabla f(x_k) \Vert^2)$ leads to quadratic (local) convergence:
+\begin{equation}
+    \Vert \nabla f(x_{k+1}) \Vert \leq C \Vert \nabla f(x_k) \Vert^2.
+\end{equation}
+albeit this tighter restriction may require too many CG iterations. The chosen $\eta_k$ is a compromise between these two extremes. 
+Since the matrix is not necessarily positive definite, we also terminate if a direction of negative curvature is found \cite{nocedal2006numerical}.
+\begin{equation}
+p_k^T \nabla^{2} f(x_k) p_k < 0.
+\end{equation}
+To avoid large numbers of CG iterations, we use a preconditioner. We use a regularisation preconditioner.
+If we can show some sort of compactness of the operator for the objective function, which i think should be the case because only some of the parameters can actually effect the objective function - then we can state superlinear convergence of the CG iterations... 
+This would be huge i think.. 
+
+If we consider that an objective function of the form:
+\begin{equation}
+    J_reg(u,p) = J(u,p) + \frac{\alpha}{2} \int \Vert \nabla p \Vert^2 d\Omega
+\end{equation}
+And we simply precondition with the inverse of the stiffness matrix (im not sure what coefficiant we should use -- look this up...)

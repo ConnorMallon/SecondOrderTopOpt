@@ -1,0 +1,47 @@
+Lit review on second order in the context of TO 
+
+## Computing multiple solutions in simp with a second order method
+\cite{Papadopoulos2021} 
+They use the method we are proposing with simp -- and do something to the newton iterations to get multiple solutions i belive 
+
+## Preconditioners for krylov solvers for the H p = g subproblem in pde constrained optimization 
+https://repositories.lib.utexas.edu/server/api/core/bitstreams/95072b2e-e489-4026-b5b9-11ab4e12fdd7/content
+says Regularisation preconditioning is the most common
+but this is only good for when a small number of parameters effect the data misfit term because the operator is "compact" 
+I think that this is actually PERFECT for LS methods - since we only really have dependance on the boundary DOFs -- so the regularisation preconditioning should be good....
+I am not sure yet if we actually have to add the regularisation term to the objective though
+(page 68)
+
+## allaires students thesis (also involves that second order allaire paprer)
+"Second-order derivatives for shape optimization with a level-set method"
+\cite{vie2016second}
+very interesting and relevatn
+does a cg-newton method and a full newton method for compliance probklems 
+Now, they show sorta shit results for discretise then optimise and a biut better for optimise then discretise 
+but they say that there discretise then optimise shit results could be due to the fact that they use ersatz 
+we could use cutfem..... 
+also, they do not play around with the forcing criteria for the cg iterates - i think therefore it is not that approprait
+the cg should lie somehere btwn newton and gradient
+i think the only reason it would is becaus eof the trust region steps.. 
+lets do a bit more investigation down this line... .
+
+## NGSolve second order stuff 
+Full newton for shape opt 
+\cite{Gangl2020}
+shows much faster convergence for H1 regularsised second order for a thermal problem (data misfit objective)
+(unconstrained) ? 
+
+## SQP simp 
+\cite{RojasLabanda2016}
+Shows reduced iterations when using a newton like SQP method (full (modifired) hessian built - obviously expensice )
+
+## SQP simp same as above - ole sigmund
+\cite{RojasLabanda2017}
+shows the above method requiring fewer iterations than MMA 
+
+## another simp sqp but a bit pooror quality papoer 
+\cite{Liao2022}
+Shows slightly improved convergence 
+
+## solving simp newton on a reduced space so solves are cheaper 
+\cite{Evgrafov2014}
