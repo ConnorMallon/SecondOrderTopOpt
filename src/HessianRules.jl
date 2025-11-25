@@ -8,7 +8,7 @@ function incremental_state_pushforward(p_to_u,ṗ,ph)
   res = p_to_u.res
   uh = get_state(p_to_u)
   #ph = get_parameter(p_to_u)
-  
+ 
   # this should be retrieved from whatever matrix is used in the forward pass -- how can it be done cleanly so we dont have to write seperate methods for Affine and Nonlinear maps
   dv = get_fe_basis(V)
   ∂R∂u = Gridap.jacobian(uh->res(uh,dv,ph),uh) 
@@ -26,7 +26,7 @@ end
 function (p_to_u::NonlinearFEStateMap)(pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) where {T,VT,PT}
   U,V,V_p = p_to_u.spaces
   res = p_to_u.res
-
+  
   p = ForwardDiff.value.(pᵋ)
   ph = FEFunction(V_p,p)
   ṗ =  mapreduce(ForwardDiff.partials, vcat, pᵋ)'
@@ -45,9 +45,9 @@ function (p_to_u::NonlinearFEStateMap)(pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) 
   dv = get_fe_basis(V)
   ∂R∂p = Gridap.jacobian(p->res(uh,dv,p),ph)
   ∂R∂p_mat = assemble_matrix(∂R∂p,V_p,V)
-
+  
   # once per inner iteration
-  u̇ = ∂R∂u_mat \ (-∂R∂p_mat * ṗ)
+  u̇ = ∂R∂u_mat \ (-∂R∂p_mat * ṗ')
 
   return map(u, eachrow(u̇)) do v, p
     ForwardDiff.Dual{T}(v, p...)

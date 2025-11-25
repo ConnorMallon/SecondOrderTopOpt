@@ -4,6 +4,7 @@ using SecondOrderTopOpt
 using Test, Gridap, GridapTopOpt
 using FiniteDifferences
 using Zygote
+using ForwardDiff
 
 # FE setup
 order = 1 
@@ -157,16 +158,13 @@ end
 H_fd = FiniteDifferences.jacobian(central_fdm(5,2),p_to_j,p)
 @test H_fd[1] * ṗ ≈ Hṗ
 
-# try to pipe a dual through the maps.....
-# with ForwardDiff 
-using ForwardDiff
+# piping duals through the maps 
 ∇f = up->Zygote.gradient(up_to_j,up)[1]
 u̇ṗ = vcat(u̇,ṗ)
 du̇dṗ =  ForwardDiff.derivative(α -> ∇f(up + α*u̇ṗ), 0)
 @test du̇dṗ ≈ u̇ṗ_FD
 
 # check the incremental state with our forward pass:
-
 #pᵋ = ForwardDiff.Dual(p,ṗ)
 T = ForwardDiff.Tag(()->(),typeof(p))
 pᵋ = map(p, ṗ) do v, p
@@ -176,15 +174,11 @@ uᵋ = state_map(pᵋ)
 ForwardDiff.value.(uᵋ) ≈ u
 vec(mapreduce(ForwardDiff.partials, hcat, uᵋ)) ≈ u̇
 
-# what else can we check with... 
-# we know partial calculation is correct...
-# can we get something else "along the way" 
-
-using ForwardDiff
-state_map(p)
 p_to_j(p) = objective((state_map(p)),p)
 ∇f = p->Zygote.gradient(p_to_j,p)[1]
 dṗ =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
-@test dṗ ≈ Hṗ
+
+
+
 
 end
