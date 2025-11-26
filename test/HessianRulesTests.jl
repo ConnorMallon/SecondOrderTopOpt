@@ -15,9 +15,9 @@ model = CartesianDiscreteModel(dom,el_size)
 Ω = Triangulation(model)
 dΩ = Measure(Ω,2*order)
 reffe_scalar = ReferenceFE(lagrangian,Float64,order)
-V = TestFESpace(model,reffe_scalar;dirichlet_tags=[1,2,3,4,5,6,7])
+V = TestFESpace(model,reffe_scalar;dirichlet_tags=[1,2,3,4,5,6]) # 3 dofs
 U = TrialFESpace(V,0.0)
-V_p = TestFESpace(model,reffe_scalar;dirichlet_tags=["boundary"])
+V_p = TestFESpace(model,reffe_scalar;dirichlet_tags=[2,3,4,5,6,7,8]) # 2 dofs
 
 #########################################
 # Second order partial derivative tests #
@@ -88,8 +88,8 @@ res(u,v,p) = ∫( p*∇(u)⋅∇(v)-f*v )dΩ
 J(u,p) = ∫( f*u + 0*p )dΩ # p term to avoid dual error - should be fixed in the future
 state_map = NonlinearFEStateMap(res,U,V,V_p)
 objective = GridapTopOpt.StateParamMap(J,state_map)
-ṗ = [0.16337618888610783]
-p = [0.3253596201459815]
+ṗ = [0.16337618888610783,1.54235]
+p = [0.3253596201459815,2.45346264]
 ph = FEFunction(V_p,p)
 u = copy(state_map(p))
 uh = FEFunction(U,u)
@@ -145,15 +145,15 @@ Zygote.gradient(p->objective(state_map(p),p),p) # update λ and u
 
 # incremental state test (ṗ->u̇)
 function p_to_u(p)
-    ph = FEFunction(V_p,[p])
+    ph = FEFunction(V_p,p)
     op = FEOperator((u,v)->res(u,v,ph),U,V)
     uh = solve(op)
     return uh.free_values
 end
 uᵋ = state_map(pᵋ)
 u̇ = vec(mapreduce(ForwardDiff.partials, hcat, uᵋ))
-∂u_∂p_FD = FiniteDifferences.central_fdm(5,1)(p_to_u,p[1])
-∂u_∂p_FD_ṗ = ∂u_∂p_FD .* ṗ
+∂u_∂p_FD = FiniteDifferences.jacobian(central_fdm(5,1),p_to_u,p)[1]
+∂u_∂p_FD_ṗ = ∂u_∂p_FD * ṗ
 @test u̇ ≈ ∂u_∂p_FD_ṗ 
 
 # entire incremental map (including the adjoint part) (ṗ->dṗ)
@@ -163,10 +163,12 @@ function p_to_j(p)
     uh = solve(op)
     sum(J(uh,ph))
 end
-H_fd = FiniteDifferences.jacobian(central_fdm(5,2),p_to_j,p)
+g_fd = p->FiniteDifferences.jacobian(central_fdm(5,1),p_to_j,p)
+Hṗ_fd = FiniteDifferences.jacobian(central_fdm(5,1),g_fd,p)[1]*ṗ
+
 p_to_j(p) = objective((state_map(p)),p)
 ∇f = p->Zygote.gradient(p_to_j,p)[1]
 Hṗ_FOR =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
-@test H_fd[1] * ṗ ≈ Hṗ_FOR
+Hṗ_fd ≈ Hṗ_FOR
 
-end
+end # module
