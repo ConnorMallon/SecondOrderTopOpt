@@ -121,35 +121,9 @@ dṗ_R = ∂2R∂p2_mat*ṗ + ∂2R∂p∂u_mat*u̇
 # Unit tests for the pushforward rules #
 ########################################
 
-res(u,v,p) = ∫( (u+1)*(p)*∇(u)⋅∇(v) - f*v )dΩ
 J(u,p) = ∫( f*(1.0(sin∘(2π*u))+1)*(1.0(cos∘(2π*p))+1)*p)dΩ 
-state_map = NonlinearFEStateMap(res,U,V,V_p)
 objective = GridapTopOpt.StateParamMap(J,state_map)
-#u = copy(state_map(p)) # update u
-Zygote.gradient(p->objective(state_map(p),p),p) # update λ and u
 
-# uh = FEFunction(U,u)
-# u̇ = incremental_state_pushforward(state_map,ṗ,ph)#res,uh,ph,ṗ,spaces)
-# du̇, dṗ = incremental_objective_pushforward(objective,u̇,ṗ)#J,uh,ph,u̇,ṗ,spaces)
-# λ = state_map.cache.adj_cache[3]
-# λh = FEFunction(V,λ)
-# spaces = (U,V,V_p)
-# ∂2R∂u2_mat_u̇, ∂2R∂u∂p_mat_ṗ, ∂2R∂p2_mat_ṗ, ∂2R∂p∂u_mat_u̇ = incremental_adjoint_partials(res,uh,ph,λh,spaces)
-# #λ⁻ = incremental_adjoint_value(res,J,uh,λh,ph,u̇,ṗ,du̇,du̇_R,spaces).free_values
-
-# incremental state test (ṗ->u̇)
-function p_to_u(p)
-    ph = FEFunction(V_p,[p])
-    op = FEOperator((u,v)->res(u,v,ph),U,V)
-    uh = solve(op)
-    return uh.free_values
-end
-uᵋ = state_map(pᵋ)
-u̇ = vec(mapreduce(ForwardDiff.partials, hcat, uᵋ))
-∂u_∂p_FD = FiniteDifferences.central_fdm(5,1)(p_to_u,p[1])
-∂u_∂p_FD_ṗ = ∂u_∂p_FD .* ṗ
-@test u̇ ≈ ∂u_∂p_FD_ṗ 
- 
 # incremental objective (and pullback) test (u̇->du̇)
 N = num_free_dofs(V)
 function up_to_j(up)
@@ -163,6 +137,24 @@ u̇ṗ = vcat(u̇,ṗ)
 du̇dṗ =  ForwardDiff.derivative(α -> ∇f(up + α*u̇ṗ), 0)
 du̇dṗ_FD =FiniteDifferences.jacobian(central_fdm(5,1),up->Zygote.gradient(up_to_j,up)[1],up)[1]*vcat(u̇,ṗ)
 @test du̇dṗ_FD ≈ du̇dṗ
+
+# Nonlinear state map tests 
+res(u,v,p) = ∫( (u+1)*(p)*∇(u)⋅∇(v) - f*v )dΩ
+state_map = NonlinearFEStateMap(res,U,V,V_p)
+Zygote.gradient(p->objective(state_map(p),p),p) # update λ and u
+
+# incremental state test (ṗ->u̇)
+function p_to_u(p)
+    ph = FEFunction(V_p,[p])
+    op = FEOperator((u,v)->res(u,v,ph),U,V)
+    uh = solve(op)
+    return uh.free_values
+end
+uᵋ = state_map(pᵋ)
+u̇ = vec(mapreduce(ForwardDiff.partials, hcat, uᵋ))
+∂u_∂p_FD = FiniteDifferences.central_fdm(5,1)(p_to_u,p[1])
+∂u_∂p_FD_ṗ = ∂u_∂p_FD .* ṗ
+@test u̇ ≈ ∂u_∂p_FD_ṗ 
 
 # entire incremental map (including the adjoint part) (ṗ->dṗ)
 function p_to_j(p)
