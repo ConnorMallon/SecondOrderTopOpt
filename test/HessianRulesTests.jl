@@ -19,38 +19,14 @@ V = TestFESpace(model,reffe_scalar;dirichlet_tags=[1,2,3,4,5,6,7])
 U = TrialFESpace(V,0.0)
 V_p = TestFESpace(model,reffe_scalar;dirichlet_tags=["boundary"])
 
-# Self-adjoint tests 
-f(x) = 1.0
-res(u,v,p) = ∫( p*∇(u)⋅∇(v)-f*v )dΩ   
-J(u,p) = ∫( f*u + 0*p )dΩ
-state_map = NonlinearFEStateMap(res,U,V,V_p)
-objective = GridapTopOpt.StateParamMap(J,state_map)
-ṗ = [0.16337618888610783]
-p = [0.3253596201459815]
-ph = FEFunction(V_p,p)
-u = copy(state_map(p))
-uh = FEFunction(U,u)
-Zygote.gradient(p->objective(state_map(p),p),p) # update λ
-λ = state_map.cache.adj_cache[3]
-@test u ≈ λ
+#########################################
+# Second order partial derivative tests #
+#########################################
 
-λh = FEFunction(V,λ)
-#spaces = U,V,V_p
-u̇ = incremental_state_pushforward(state_map,ṗ,ph)#res,uh,ph,ṗ,spaces)
-du̇, dṗ = incremental_objective_pushforward(objective,u̇,ṗ)
-λ = state_map.cache.adj_cache[3]
-λh = FEFunction(V,λ)
-spaces = (U,V,V_p)
-∂2R∂u2_mat, ∂2R∂u∂p_mat, ∂2R∂p2_mat, ∂2R∂p∂u_mat = incremental_adjoint_partials(res,uh,ph,λh,spaces)
-du̇_R = ∂2R∂u2_mat*u̇ + ∂2R∂u∂p_mat*ṗ
-dṗ_R = ∂2R∂p2_mat*ṗ + ∂2R∂p∂u_mat*u̇
-# λ⁻ = solve_incremental_adjoint(res,J,uh,λh,ph,u̇,ṗ,du̇,du̇_R,spaces,state_map).free_values
-# @test u̇ ≈ λ⁻
-# add this back later when \lambda⁻ is available in a cache
-
-# Second order partial derivative tests 
 J(u,p) = ∫(u*u*p*p)dΩ # keep p term otherwise dual error
-
+uh = FEFunction(U,rand(num_free_dofs(U)))
+ph = FEFunction(V_p,rand(num_free_dofs(V_p)))
+λh = FEFunction(V,rand(num_free_dofs(V)))
 spaces = (U,V_p)
 ∂2J∂u2_mat, ∂2J∂u∂p_mat, ∂2J∂p2_mat, ∂2J∂p∂u_mat = SecondOrderTopOpt.incremental_objective_partials(J,uh,ph,spaces)
 
@@ -103,21 +79,63 @@ spaces = (U,V,V_p)
 ∂2R∂p∂u_matrix_analytical = assemble_matrix(∂2R∂p∂u_analytical(uh,λh,ph),U,V_p)
 @test ∂2R∂p∂u_matrix_analytical ≈ ∂2R∂p∂u_mat
 
-# Unit tests for the pushforward rules 
+######################
+# Self-adjoint tests #
+######################
+
+f(x) = 1.0
+res(u,v,p) = ∫( p*∇(u)⋅∇(v)-f*v )dΩ   
+J(u,p) = ∫( f*u + 0*p )dΩ # p term to avoid dual error - should be fixed in the future
+state_map = NonlinearFEStateMap(res,U,V,V_p)
+objective = GridapTopOpt.StateParamMap(J,state_map)
+ṗ = [0.16337618888610783]
+p = [0.3253596201459815]
+ph = FEFunction(V_p,p)
+u = copy(state_map(p))
+uh = FEFunction(U,u)
+Zygote.gradient(p->objective(state_map(p),p),p) # update λ
+λ = state_map.cache.adj_cache[3]
+@test u ≈ λ # the adjoint should equal the solution 
+
+λh = FEFunction(V,λ)
+T = ForwardDiff.Tag(()->(),typeof(p))
+pᵋ = map(p, ṗ) do v, p
+    ForwardDiff.Dual{T}(v, p...)
+end
+uᵋ = state_map(pᵋ)
+ForwardDiff.value.(uᵋ) ≈ u
+u̇ = vec(mapreduce(ForwardDiff.partials, hcat, uᵋ))
+
+#du̇, dṗ = incremental_objective_pushforward(objective,u̇,ṗ)
+λ = state_map.cache.adj_cache[3]
+λh = FEFunction(V,λ)
+spaces = (U,V,V_p)
+∂2R∂u2_mat, ∂2R∂u∂p_mat, ∂2R∂p2_mat, ∂2R∂p∂u_mat = incremental_adjoint_partials(res,uh,ph,λh,spaces)
+du̇_R = ∂2R∂u2_mat*u̇ + ∂2R∂u∂p_mat*ṗ
+dṗ_R = ∂2R∂p2_mat*ṗ + ∂2R∂p∂u_mat*u̇
+# λ⁻ = solve_incremental_adjoint(res,J,uh,λh,ph,u̇,ṗ,du̇,du̇_R,spaces,state_map).free_values
+# @test u̇ ≈ λ⁻
+# add this back later when \lambda⁻ is available in a cache
+
+########################################
+# Unit tests for the pushforward rules #
+########################################
+
 res(u,v,p) = ∫( (u+1)*(p)*∇(u)⋅∇(v) - f*v )dΩ
 J(u,p) = ∫( f*(1.0(sin∘(2π*u))+1)*(1.0(cos∘(2π*p))+1)*p)dΩ 
 state_map = NonlinearFEStateMap(res,U,V,V_p)
 objective = GridapTopOpt.StateParamMap(J,state_map)
-u = copy(state_map(p))
-uh = FEFunction(U,u)
-u̇ = incremental_state_pushforward(state_map,ṗ,ph)#res,uh,ph,ṗ,spaces)
-du̇, dṗ = incremental_objective_pushforward(objective,u̇,ṗ)#J,uh,ph,u̇,ṗ,spaces)
-Zygote.gradient(p->objective(state_map(p),p),p) # update λ
-λ = state_map.cache.adj_cache[3]
-λh = FEFunction(V,λ)
-spaces = (U,V,V_p)
-∂2R∂u2_mat_u̇, ∂2R∂u∂p_mat_ṗ, ∂2R∂p2_mat_ṗ, ∂2R∂p∂u_mat_u̇ = incremental_adjoint_partials(res,uh,ph,λh,spaces)
-#λ⁻ = incremental_adjoint_value(res,J,uh,λh,ph,u̇,ṗ,du̇,du̇_R,spaces).free_values
+#u = copy(state_map(p)) # update u
+Zygote.gradient(p->objective(state_map(p),p),p) # update λ and u
+
+# uh = FEFunction(U,u)
+# u̇ = incremental_state_pushforward(state_map,ṗ,ph)#res,uh,ph,ṗ,spaces)
+# du̇, dṗ = incremental_objective_pushforward(objective,u̇,ṗ)#J,uh,ph,u̇,ṗ,spaces)
+# λ = state_map.cache.adj_cache[3]
+# λh = FEFunction(V,λ)
+# spaces = (U,V,V_p)
+# ∂2R∂u2_mat_u̇, ∂2R∂u∂p_mat_ṗ, ∂2R∂p2_mat_ṗ, ∂2R∂p∂u_mat_u̇ = incremental_adjoint_partials(res,uh,ph,λh,spaces)
+# #λ⁻ = incremental_adjoint_value(res,J,uh,λh,ph,u̇,ṗ,du̇,du̇_R,spaces).free_values
 
 # incremental state test (ṗ->u̇)
 function p_to_u(p)
@@ -126,14 +144,13 @@ function p_to_u(p)
     uh = solve(op)
     return uh.free_values
 end
-u̇ = incremental_state_pushforward(state_map,ṗ,ph)
+uᵋ = state_map(pᵋ)
+u̇ = vec(mapreduce(ForwardDiff.partials, hcat, uᵋ))
 ∂u_∂p_FD = FiniteDifferences.central_fdm(5,1)(p_to_u,p[1])
 ∂u_∂p_FD_ṗ = ∂u_∂p_FD .* ṗ
 @test u̇ ≈ ∂u_∂p_FD_ṗ 
  
-# incremental objective (and pullback) (u̇->du̇)
-objective(u,p)
-du̇, dṗ = incremental_objective_pushforward(objective,u̇,ṗ)
+# incremental objective (and pullback) test (u̇->du̇)
 N = num_free_dofs(V)
 function up_to_j(up)
     u = up[1:N]
@@ -141,14 +158,13 @@ function up_to_j(up)
     j = objective(u,p)
 end
 up = vcat(u,p)
-u̇ṗ_FD =FiniteDifferences.jacobian(central_fdm(5,1),up->Zygote.gradient(up_to_j,up)[1],up)[1]*vcat(u̇,ṗ)
-@test u̇ṗ_FD[1:N] ≈ du̇ atol = 1e-11
-@test u̇ṗ_FD[N+1:end] ≈ dṗ
+u̇ṗ = vcat(u̇,ṗ)
+∇f = up->Zygote.gradient(up_to_j,up)[1]
+du̇dṗ =  ForwardDiff.derivative(α -> ∇f(up + α*u̇ṗ), 0)
+du̇dṗ_FD =FiniteDifferences.jacobian(central_fdm(5,1),up->Zygote.gradient(up_to_j,up)[1],up)[1]*vcat(u̇,ṗ)
+@test du̇dṗ_FD ≈ du̇dṗ
 
 # entire incremental map (including the adjoint part) (ṗ->dṗ)
-dṗ_adj = incremental_adjoint_pushforward(state_map,u̇,ṗ,du̇) 
-Hṗ = dṗ + dṗ_adj
-
 function p_to_j(p)
     ph = FEFunction(V_p,p)
     op = FEOperator((u,v)->res(u,v,ph),U,V)
@@ -156,29 +172,9 @@ function p_to_j(p)
     sum(J(uh,ph))
 end
 H_fd = FiniteDifferences.jacobian(central_fdm(5,2),p_to_j,p)
-@show H_fd[1] * ṗ
-@test H_fd[1] * ṗ ≈ Hṗ
-
-# piping duals through the maps 
-∇f = up->Zygote.gradient(up_to_j,up)[1]
-u̇ṗ = vcat(u̇,ṗ)
-du̇dṗ =  ForwardDiff.derivative(α -> ∇f(up + α*u̇ṗ), 0)
-@test du̇dṗ ≈ u̇ṗ_FD
-
-# check the incremental state with our forward pass:
-#pᵋ = ForwardDiff.Dual(p,ṗ)
-T = ForwardDiff.Tag(()->(),typeof(p))
-pᵋ = map(p, ṗ) do v, p
-    ForwardDiff.Dual{T}(v, p...)
-end
-uᵋ = state_map(pᵋ)
-ForwardDiff.value.(uᵋ) ≈ u
-vec(mapreduce(ForwardDiff.partials, hcat, uᵋ)) ≈ u̇
-
 p_to_j(p) = objective((state_map(p)),p)
 ∇f = p->Zygote.gradient(p_to_j,p)[1]
 Hṗ_FOR =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
-
 @test H_fd[1] * ṗ ≈ Hṗ_FOR
 
 end
