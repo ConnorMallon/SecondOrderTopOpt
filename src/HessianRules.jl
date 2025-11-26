@@ -1,34 +1,9 @@
 #############################################################################
-# ṗ->u̇ : # Solving the "incremental state equation" ∂R/∂u * u̇ = - ∂R/∂p * ṗ #
+# ṗ->u̇ : Solving the "incremental state equation" ∂R/∂u * u̇ = - ∂R/∂p * ṗ #
 #############################################################################
 
-function incremental_adjoint_partials(res,uh,ph,λh,spaces)
-  U,V,V_p = spaces
-
-  # ∂²R / ∂u² * u̇ * λ
-  ∂2R∂u2 = Gridap.hessian(uh->res(uh,λh,ph),uh) 
-  ∂2R∂u2_mat = assemble_matrix(∂2R∂u2,U,V)  
-
-  # ∂/∂p (∂R/∂u * λ) * ṗ
-  ∂R∂u_λ(uh,ph) = Gridap.gradient(uh->res(uh,λh,ph),uh)
-  ∂2R∂u∂p = Gridap.jacobian(p->∂R∂u_λ(uh,p),ph) 
-  ∂2R∂u∂p_mat = assemble_matrix(∂2R∂u∂p,V_p,V)
-
-  # ∂²R / ∂p² * ṗ * λ
-  ∂2R∂p2 = Gridap.hessian(ph->res(uh,λh,ph),ph)
-  ∂2R∂p2_mat = assemble_matrix(∂2R∂p2,V_p,V_p)
-
-  # ∂/∂u (∂R/∂p * λ) * ṗ
-  ∂R∂p_λ(uh,ph) = Gridap.gradient(ph->res(uh,λh,ph),ph)
-  ∂2R∂p∂u = Gridap.jacobian(uh->∂R∂p_λ(uh,ph),uh) 
-  ∂2R∂p∂u_mat = assemble_matrix(∂2R∂p∂u,U,V_p)
-
-  return ∂2R∂u2_mat, ∂2R∂u∂p_mat, ∂2R∂p2_mat, ∂2R∂p∂u_mat
-end
-
-function (p_to_u::NonlinearFEStateMap)(pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) where {T,VT,PT}
+function incremental_state_map(p_to_u::AbstractFEStateMap, res,  pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) where {T,VT,PT}
   U,V,V_p = p_to_u.spaces
-  res = p_to_u.res
   
   p = ForwardDiff.value.(pᵋ)
   ph = FEFunction(V_p,p)
@@ -57,13 +32,45 @@ function (p_to_u::NonlinearFEStateMap)(pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) 
   end
 end
 
-function ChainRulesCore.rrule(p_to_u::NonlinearFEStateMap,pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) where {T,VT,PT}
+function (p_to_u::AffineFEStateMap)(pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) where {T,VT,PT}
+  res = (u,v,p) -> p_to_u.biform(u,v,p) - p_to_u.liform(v,p)
+  incremental_state_map(p_to_u, res, pᵋ)
+end
+
+function (p_to_u::NonlinearFEStateMap)(pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) where {T,VT,PT}
+  res = p_to_u.res
+  incremental_state_map(p_to_u, res, pᵋ)
+end
+
+function incremental_adjoint_partials(res,uh,ph,λh,spaces)
+  U,V,V_p = spaces
+
+  # ∂²R / ∂u² * u̇ * λ
+  ∂2R∂u2 = Gridap.hessian(uh->res(uh,λh,ph),uh) 
+  ∂2R∂u2_mat = assemble_matrix(∂2R∂u2,U,V)  
+
+  # ∂/∂p (∂R/∂u * λ) * ṗ
+  ∂R∂u_λ(uh,ph) = Gridap.gradient(uh->res(uh,λh,ph),uh)
+  ∂2R∂u∂p = Gridap.jacobian(p->∂R∂u_λ(uh,p),ph) 
+  ∂2R∂u∂p_mat = assemble_matrix(∂2R∂u∂p,V_p,V)
+
+  # ∂²R / ∂p² * ṗ * λ
+  ∂2R∂p2 = Gridap.hessian(ph->res(uh,λh,ph),ph)
+  ∂2R∂p2_mat = assemble_matrix(∂2R∂p2,V_p,V_p)
+
+  # ∂/∂u (∂R/∂p * λ) * ṗ
+  ∂R∂p_λ(uh,ph) = Gridap.gradient(ph->res(uh,λh,ph),ph)
+  ∂2R∂p∂u = Gridap.jacobian(uh->∂R∂p_λ(uh,ph),uh) 
+  ∂2R∂p∂u_mat = assemble_matrix(∂2R∂p∂u,U,V_p)
+
+  return ∂2R∂u2_mat, ∂2R∂u∂p_mat, ∂2R∂p2_mat, ∂2R∂p∂u_mat
+end
+
+function incremental_adjoint_pullback(p_to_u,res,uᵋ,pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}},duᵋ) where {T,VT,PT}
   spaces = p_to_u.spaces
   U,V,V_p = spaces
-  res = p_to_u.res
   adjoint_ns, _, λ = p_to_u.cache.adj_cache
 
-  uᵋ = p_to_u(pᵋ)
   p = ForwardDiff.value.(pᵋ)
   ph = FEFunction(V_p,p)
   ṗ =  vec(mapreduce(ForwardDiff.partials, hcat, pᵋ))
@@ -71,41 +78,49 @@ function ChainRulesCore.rrule(p_to_u::NonlinearFEStateMap,pᵋ::Vector{ForwardDi
   uh = FEFunction(U,u)
   u̇ = vec(mapreduce(ForwardDiff.partials, hcat, uᵋ))
 
-  function p_to_u_pullback(duᵋ)
-    # pullback the value 
-    du = ForwardDiff.value.(duᵋ)
-    dudp_vec, assem_deriv = get_plb_cache(p_to_u)
-    λ =  solve!(λ,adjoint_ns,du)
-    λh = FEFunction(V,λ)
-    ∂R∂p_λ = Gridap.gradient(ph->res(uh,λh,ph),ph)
-    ∂R∂p_vec_λ = assemble_vector(∂R∂p_λ,V_p)
-    dp = - ∂R∂p_vec_λ
+  # pullback the value 
+  du = ForwardDiff.value.(duᵋ)
+  dudp_vec, assem_deriv = get_plb_cache(p_to_u)
+  λ =  solve!(λ,adjoint_ns,du)
+  λh = FEFunction(V,λ)
+  ∂R∂p_λ = Gridap.gradient(ph->res(uh,λh,ph),ph)
+  ∂R∂p_vec_λ = assemble_vector(∂R∂p_λ,V_p)
+  dp = - ∂R∂p_vec_λ
 
-    # pullback the dual component
-    du̇ = vec(mapreduce(ForwardDiff.partials, hcat, duᵋ))
+  # pullback the dual component
+  du̇ = vec(mapreduce(ForwardDiff.partials, hcat, duᵋ))
 
-    # new caches - needs work
-    λ⁻ = copy(λ)
+  # new caches - needs work
+  λ⁻ = copy(λ)
 
-    # once per outer iteration
-    ∂2R∂u2_mat, ∂2R∂u∂p_mat, ∂2R∂p2_mat, ∂2R∂p∂u_mat = incremental_adjoint_partials(res,uh,ph,λh,spaces)
+  # once per outer iteration
+  ∂2R∂u2_mat, ∂2R∂u∂p_mat, ∂2R∂p2_mat, ∂2R∂p∂u_mat = incremental_adjoint_partials(res,uh,ph,λh,spaces)
 
-    # once per inner iteration
-    du̇_R = ∂2R∂u2_mat*u̇ + ∂2R∂u∂p_mat*ṗ
-    dṗ_R = ∂2R∂p2_mat*ṗ + ∂2R∂p∂u_mat*u̇
-    λ⁻ = solve!(λ⁻,adjoint_ns,du̇-du̇_R)
-    λ⁻h = FEFunction(V,λ⁻)
-    ∂R∂p_λ⁻ = Gridap.gradient(ph->res(uh,λ⁻h,ph),ph)
-    ∂R∂p_vec_λ⁻ = assemble_vector(∂R∂p_λ⁻,V_p)
-    dṗ_adj = - ∂R∂p_vec_λ⁻ - dṗ_R
+  # once per inner iteration
+  du̇_R = ∂2R∂u2_mat*u̇ + ∂2R∂u∂p_mat*ṗ
+  dṗ_R = ∂2R∂p2_mat*ṗ + ∂2R∂p∂u_mat*u̇
+  λ⁻ = solve!(λ⁻,adjoint_ns,du̇-du̇_R)
+  λ⁻h = FEFunction(V,λ⁻)
+  ∂R∂p_λ⁻ = Gridap.gradient(ph->res(uh,λ⁻h,ph),ph)
+  ∂R∂p_vec_λ⁻ = assemble_vector(∂R∂p_λ⁻,V_p)
+  dṗ_adj = - ∂R∂p_vec_λ⁻ - dṗ_R
 
-    dpᵋ = map(dp, eachrow(dṗ_adj)) do v, p
-      ForwardDiff.Dual{T}(v, p...)
-    end
-    ( NoTangent(), dpᵋ)
+  dpᵋ = map(dp, eachrow(dṗ_adj)) do v, p
+    ForwardDiff.Dual{T}(v, p...)
   end
+  ( NoTangent(), dpᵋ)
+end
 
-  return uᵋ, p_to_u_pullback
+function ChainRulesCore.rrule(p_to_u::NonlinearFEStateMap,pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) where {T,VT,PT}
+  res = p_to_u.res
+  uᵋ = p_to_u(pᵋ)
+  return uᵋ, duᵋ -> incremental_adjoint_pullback(p_to_u,res,uᵋ,pᵋ,duᵋ)
+end
+
+function ChainRulesCore.rrule(p_to_u::AffineFEStateMap,pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) where {T,VT,PT}
+  res = (u,v,p) -> p_to_u.biform(u,v,p) - p_to_u.liform(v,p)
+  uᵋ = p_to_u(pᵋ)
+  return uᵋ, duᵋ -> incremental_adjoint_pullback(p_to_u,res,uᵋ,pᵋ,duᵋ)
 end
 
 ######################################################################

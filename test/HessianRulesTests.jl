@@ -171,4 +171,38 @@ p_to_j(p) = objective((state_map(p)),p)
 Hṗ_FOR =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
 Hṗ_fd ≈ Hṗ_FOR
 
+#Affine state map Tests
+a(u,v,p) = ∫( p*(p+1)*∇(u)⋅∇(v) )dΩ
+l(v,p) = ∫( f*v )dΩ
+state_map = AffineFEStateMap(a,l,U,V,V_p)
+Zygote.gradient(p->objective(state_map(p),p),p) # update λ and u
+
+# incremental state test (ṗ->u̇)
+function p_to_u(p)
+    ph = FEFunction(V_p,p)
+    op = FEOperator((u,v)->a(u,v,ph)-l(v,ph),U,V)
+    uh = solve(op)
+    return uh.free_values
+end
+uᵋ = state_map(pᵋ)
+u̇ = vec(mapreduce(ForwardDiff.partials, hcat, uᵋ))
+∂u_∂p_FD = FiniteDifferences.jacobian(central_fdm(5,1),p_to_u,p)[1]
+∂u_∂p_FD_ṗ = ∂u_∂p_FD * ṗ
+@test u̇ ≈ ∂u_∂p_FD_ṗ 
+
+# entire incremental map (including the adjoint part) (ṗ->dṗ)
+function p_to_j(p)
+    ph = FEFunction(V_p,p)
+    op = FEOperator((u,v)->res(u,v,ph),U,V)
+    uh = solve(op)
+    sum(J(uh,ph))
+end
+g_fd = p->FiniteDifferences.jacobian(central_fdm(5,1),p_to_j,p)
+Hṗ_fd = FiniteDifferences.jacobian(central_fdm(5,1),g_fd,p)[1]*ṗ
+
+p_to_j(p) = objective((state_map(p)),p)
+∇f = p->Zygote.gradient(p_to_j,p)[1]
+Hṗ_FOR =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
+Hṗ_fd ≈ Hṗ_FOR
+
 end # module
