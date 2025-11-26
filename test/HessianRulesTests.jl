@@ -156,6 +156,7 @@ function p_to_j(p)
     sum(J(uh,ph))
 end
 H_fd = FiniteDifferences.jacobian(central_fdm(5,2),p_to_j,p)
+@show H_fd[1] * ṗ
 @test H_fd[1] * ṗ ≈ Hṗ
 
 # piping duals through the maps 
@@ -176,9 +177,8 @@ vec(mapreduce(ForwardDiff.partials, hcat, uᵋ)) ≈ u̇
 
 p_to_j(p) = objective((state_map(p)),p)
 ∇f = p->Zygote.gradient(p_to_j,p)[1]
-dṗ =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
+Hṗ_FOR =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
 
-
-
+@test H_fd[1] * ṗ ≈ Hṗ_FOR
 
 end
