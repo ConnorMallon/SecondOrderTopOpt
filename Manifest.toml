@@ -2,7 +2,7 @@
 
 julia_version = "1.11.7"
 manifest_format = "2.0"
-project_hash = "6789c535088e709055369c29356f6b41892c770a"
+project_hash = "6550e2cf74ab165818bea8f9c67de4cc246d8049"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "27cecae79e5cc9935255f90c53bb831cc3c870d7"
@@ -716,9 +716,7 @@ version = "0.6.1"
 
 [[deps.GridapTopOpt]]
 deps = ["BenchmarkTools", "BlockArrays", "ChainRulesCore", "CircularArrays", "DataStructures", "DelimitedFiles", "FillArrays", "FiniteDiff", "ForwardDiff", "Gridap", "GridapDistributed", "GridapEmbedded", "GridapGmsh", "GridapPETSc", "GridapSolvers", "JLD2", "LinearAlgebra", "MPI", "PartitionedArrays", "Printf", "ReverseDiff", "STLCutters", "SparseMatricesCSR", "Zygote"]
-git-tree-sha1 = "bd04de0b2f79da5f6d4d3c2f26c354531370fe71"
-repo-rev = "SecondOrderDiff"
-repo-url = "https://github.com/zjwegert/GridapTopOpt.jl.git"
+path = "/home/mallon2/Documents/GridapTopOpt.jl"
 uuid = "27dd0110-1916-4fd6-8b4b-1bc109db1170"
 version = "0.4.1"
 

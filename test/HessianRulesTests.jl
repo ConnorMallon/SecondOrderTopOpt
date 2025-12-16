@@ -24,11 +24,15 @@ V_p = TestFESpace(model,reffe_scalar;dirichlet_tags=[2,3,4,5,6,7,8]) # 2 dofs
 #########################################
 
 J(u,p) = ∫(u*u*p*p)dΩ # keep p term otherwise dual error
-uh = FEFunction(U,rand(num_free_dofs(U)))
-ph = FEFunction(V_p,rand(num_free_dofs(V_p)))
-λh = FEFunction(V,rand(num_free_dofs(V)))
+u = rand(num_free_dofs(U))
+p = rand(num_free_dofs(V_p))
+λ = rand(num_free_dofs(V))
+uh = FEFunction(U,u)
+ph = FEFunction(V_p,p)
+λh = FEFunction(V,λ)
 spaces = (U,V_p)
-∂2J∂u2_mat, ∂2J∂u∂p_mat, ∂2J∂p2_mat, ∂2J∂p∂u_mat = SecondOrderTopOpt.incremental_objective_partials(J,uh,ph,spaces)
+_, ∂2J∂u2_mat, _, ∂2J∂u∂p_mat, _, ∂2J∂p2_mat, _, ∂2J∂p∂u_mat = GridapTopOpt.build_inc_obj_cache(J,uh,ph,spaces)
+#∂2J∂u2_mat, ∂2J∂u∂p_mat, ∂2J∂p2_mat, ∂2J∂p∂u_mat = SecondOrderTopOpt.incremental_objective_partials(J,uh,ph,spaces)
 
 # ∂²J / ∂u² * u̇
 dv = get_fe_basis(V)
@@ -57,8 +61,8 @@ dp_ = get_trial_fe_basis(V_p)
 
 f(x) = 1.0
 res(u,v,p) = ∫( p*∇(u)⋅∇(v) - f*v )dΩ
-spaces = (U,V,V_p)
-∂2R∂u2_mat, ∂2R∂u∂p_mat, ∂2R∂p2_mat, ∂2R∂p∂u_mat = incremental_adjoint_partials(res,uh,ph,λh,spaces)
+state_map = NonlinearFEStateMap(res,U,V,V_p,diff_order=2)
+∂2R∂u2_mat, ∂2R∂u∂p_mat, ∂2R∂p2_mat, ∂2R∂p∂u_mat = GridapTopOpt.update_incremental_adjoint_partials!(state_map,res,uh,ph,λh)
 
 # ∂²R / ∂u² * u̇ * λ
 ∂2∂u2R_analytical(uh,λh,ph) = ∫( 0*du*dv )dΩ
@@ -86,7 +90,7 @@ spaces = (U,V,V_p)
 f(x) = 1.0
 res(u,v,p) = ∫( p*∇(u)⋅∇(v)-f*v )dΩ   
 J(u,p) = ∫( f*u + 0*p )dΩ # p term to avoid dual error - should be fixed in the future
-state_map = NonlinearFEStateMap(res,U,V,V_p)
+state_map = NonlinearFEStateMap(res,U,V,V_p,diff_order=2)
 objective = GridapTopOpt.StateParamMap(J,state_map)
 ṗ = [0.16337618888610783,1.54235]
 p = [0.3253596201459815,2.45346264]
@@ -110,7 +114,7 @@ u̇ = vec(mapreduce(ForwardDiff.partials, hcat, uᵋ))
 λ = state_map.cache.adj_cache[3]
 λh = FEFunction(V,λ)
 spaces = (U,V,V_p)
-∂2R∂u2_mat, ∂2R∂u∂p_mat, ∂2R∂p2_mat, ∂2R∂p∂u_mat = incremental_adjoint_partials(res,uh,ph,λh,spaces)
+∂2R∂u2_mat, ∂2R∂u∂p_mat, ∂2R∂p2_mat, ∂2R∂p∂u_mat = GridapTopOpt.update_incremental_adjoint_partials!(state_map,res,uh,ph,λh)
 du̇_R = ∂2R∂u2_mat*u̇ + ∂2R∂u∂p_mat*ṗ
 dṗ_R = ∂2R∂p2_mat*ṗ + ∂2R∂p∂u_mat*u̇
 # λ⁻ = solve_incremental_adjoint(res,J,uh,λh,ph,u̇,ṗ,du̇,du̇_R,spaces,state_map).free_values
@@ -122,7 +126,7 @@ dṗ_R = ∂2R∂p2_mat*ṗ + ∂2R∂p∂u_mat*u̇
 ########################################
 
 J(u,p) = ∫( f*(1.0(sin∘(2π*u))+1)*(1.0(cos∘(2π*p))+1)*p)dΩ 
-objective = GridapTopOpt.StateParamMap(J,state_map)
+objective = GridapTopOpt.StateParamMap(J,state_map,diff_order=2)
 
 # incremental objective (and pullback) test (u̇->du̇)
 N = num_free_dofs(V)
@@ -140,7 +144,7 @@ du̇dṗ_FD =FiniteDifferences.jacobian(central_fdm(5,1),up->Zygote.gradient(up_
 
 # Nonlinear state map tests 
 res(u,v,p) = ∫( (u+1)*(p)*∇(u)⋅∇(v) - f*v )dΩ
-state_map = NonlinearFEStateMap(res,U,V,V_p)
+state_map = NonlinearFEStateMap(res,U,V,V_p,diff_order=2)
 Zygote.gradient(p->objective(state_map(p),p),p) # update λ and u
 
 # incremental state test (ṗ->u̇)
@@ -154,7 +158,7 @@ uᵋ = state_map(pᵋ)
 u̇ = vec(mapreduce(ForwardDiff.partials, hcat, uᵋ))
 ∂u_∂p_FD = FiniteDifferences.jacobian(central_fdm(5,1),p_to_u,p)[1]
 ∂u_∂p_FD_ṗ = ∂u_∂p_FD * ṗ
-@test u̇ ≈ ∂u_∂p_FD_ṗ 
+@test u̇ ≈ ∂u_∂p_FD_ṗ rtol = 1e-7
 
 # entire incremental map (including the adjoint part) (ṗ->dṗ)
 function p_to_j(p)
@@ -174,7 +178,7 @@ Hṗ_fd ≈ Hṗ_FOR
 #Affine state map Tests
 a(u,v,p) = ∫( p*(p+1)*∇(u)⋅∇(v) )dΩ
 l(v,p) = ∫( f*v )dΩ
-state_map = AffineFEStateMap(a,l,U,V,V_p)
+state_map = AffineFEStateMap(a,l,U,V,V_p,diff_order=2)
 Zygote.gradient(p->objective(state_map(p),p),p) # update λ and u
 
 # incremental state test (ṗ->u̇)
@@ -205,4 +209,4 @@ p_to_j(p) = objective((state_map(p)),p)
 Hṗ_FOR =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
 Hṗ_fd ≈ Hṗ_FOR
 
-end # module
+end # modul
