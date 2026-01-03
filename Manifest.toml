@@ -639,7 +639,7 @@ version = "0.6.1"
     Pardiso = "46dd5b70-b6fb-5a00-ae2d-e8fea33afaf2"
 
 [[deps.GridapTopOpt]]
-deps = ["BenchmarkTools", "BlockArrays", "ChainRulesCore", "CircularArrays", "DataStructures", "DelimitedFiles", "FillArrays", "FiniteDiff", "ForwardDiff", "Gridap", "GridapDistributed", "GridapEmbedded", "GridapGmsh", "GridapPETSc", "GridapSolvers", "JLD2", "LinearAlgebra", "MPI", "PartitionedArrays", "Printf", "ReverseDiff", "STLCutters", "SparseMatricesCSR", "Zygote"]
+deps = ["BenchmarkTools", "BlockArrays", "ChainRulesCore", "CircularArrays", "DataStructures", "DelimitedFiles", "FillArrays", "FiniteDiff", "ForwardDiff", "Gridap", "GridapDistributed", "GridapEmbedded", "GridapGmsh", "GridapPETSc", "GridapSolvers", "JLD2", "Krylov", "LinearAlgebra", "LinearMaps", "MPI", "PartitionedArrays", "Printf", "ReverseDiff", "STLCutters", "SparseMatricesCSR", "Zygote"]
 path = "/home/mallon2/Documents/GridapTopOpt.jl"
 uuid = "27dd0110-1916-4fd6-8b4b-1bc109db1170"
 version = "0.4.1"

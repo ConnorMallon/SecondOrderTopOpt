@@ -182,7 +182,36 @@ using Krylov
 
 #x = Krylov.cg_lanczos_shift(K,p0,[1e-4],M=K,verbose=2,check_curvature=true)
 
-x_sol = Krylov.cg_lanczos(K+A,p0,verbose=10,check_curvature=true)
+x_sol = Krylov.cg_lanczos(A,p0,verbose=1,check_curvature=true)
+
+x_sol[2].status == "negative curvature" 
+
+sum(x_sol[1])
+
+# Ok lets first just see.... 
+# use exactly the optimiser as is.... 
+# where do we hook in ???
+
+
+pcfs = CustomPDEConstrainedFunctionals(p_to_j,0,diff_order=2)
+
+## Hilbertian extension-regularisation problems
+α = α_coeff*maximum(el_Δ)
+a_hilb(p,q) =∫(α^2*∇(p)⋅∇(q) + p*q)dΩ;
+vel_ext = VelocityExtension(a_hilb,U_reg,V_reg)
+
+## Optimiser
+optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,φh;
+  γ,verbose=true,constraint_names=[])
+for (it,uh,φh) in optimiser
+  data = ["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh]
+  #iszero(it % iter_mod) && writevtk("out$it",cellfields=data)
+  write_history("history.txt",optimiser.history)
+end
+it = get_history(optimiser).niter; uh = get_state(pcfs)
+writevtk(Ω,path*"out$it",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh])
+
+
 
 
 # p0 = interpolate(initial_lsf(4,0.2),V_φ).free_values
