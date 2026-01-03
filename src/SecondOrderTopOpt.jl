@@ -8,11 +8,14 @@ using GridapTopOpt: get_state, get_parameter, StateParamMap, AbstractFEStateMap,
 using Gridap.Algebra: NLSolversCache, NewtonRaphsonCache
 using GridapSolvers.NonlinearSolvers: NewtonCache
 using LinearAlgebra
+using Optim
+#using Zygote
 
 using ChainRulesCore
 using ForwardDiff
 
 include("HessianRules.jl")
+include("SecondOrderOptimisers.jl")
 
 export incremental_state_pushforward
 export objective_partials
@@ -20,5 +23,6 @@ export incremental_objective_pushforward
 export update_incremental_adjoint_partials
 export solve_incremental_adjoint
 export incremental_adjoint_pushforward
+export NewtonCG
 
 end

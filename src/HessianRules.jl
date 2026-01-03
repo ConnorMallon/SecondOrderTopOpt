@@ -13,13 +13,16 @@ function get_ns(m::NonlinearFEStateMap)
   ns = get_ns(nls_cache)
 end
 
+get_cached_parameter(p_to_u::NonlinearFEStateMap) = p_to_u.cache.fwd_cache[4]
+get_cached_parameter(p_to_u::AffineFEStateMap) = p_to_u.cache.fwd_cache[6]
+
 # helpers
-function fwd_pass_ran(p_to_u,p)
-  p_to_u.cache.fwd_cache[4] == p && p_to_u.cache.state_updated
+function fwd_pass_ran(p_to_u::AbstractFEStateMap,p::AbstractVector)
+  get_cached_parameter(p_to_u) == p && p_to_u.cache.state_updated
 end
 
-function bwd_pass_ran(p_to_u,p)
-  p_to_u.cache.fwd_cache[4] == p && p_to_u.cache.adjoint_updated
+function bwd_pass_ran(p_to_u::AbstractFEStateMap,p::AbstractVector)
+  get_cached_parameter(p_to_u) == p && p_to_u.cache.adjoint_updated
 end
 
 function incremental_state_map(p_to_u::AbstractFEStateMap, res,  pᵋ::Vector{ForwardDiff.Dual{T,VT,PT}}) where {T,VT,PT}
@@ -30,9 +33,12 @@ function incremental_state_map(p_to_u::AbstractFEStateMap, res,  pᵋ::Vector{Fo
   ṗ =  mapreduce(ForwardDiff.partials, vcat, pᵋ)'
   u = get_state(p_to_u).free_values # current solution
 
+
+  println("Running HVP at p = $(sum(p)) and ṗ = $(sum(ṗ))")
+
   # solve state (if needed): once per outer iteration - should have been done already as the optimiser should first call the forward pass (to compute the gradient) before computing HVP's
   if !fwd_pass_ran(p_to_u,p)
-    @warn "You are not calling the forward pass before computing HVP's"
+    @warn "You are not calling the forward pass (state) before computing HVP's"
     u = p_to_u(p) # will also update the incremental state partial ∂R∂p
   end
 
@@ -70,7 +76,7 @@ function incremental_adjoint_pullback(p_to_u,res,uᵋ,pᵋ::Vector{ForwardDiff.D
 
   ## pullback the value  (solve the adjoint equation) - once per outer iteration
   if !bwd_pass_ran(p_to_u,p)
-    @warn "You are not calling the backwards pass before computing HVP's"
+    @warn "You are not calling the backwards pass (state) before computing HVP's"
     _, dp_from_u = GridapTopOpt.pullback(p_to_u,u,p,du) # This will update λ, dp_from_u and the incremental adjoint partials - it would be better if these objects were returned so that we know they were updated 
   end
 
@@ -130,7 +136,7 @@ function (u_to_j::StateParamMap)(uᵋ::Vector{ForwardDiff.Dual{T1,V1,P1}},pᵋ::
   
   # pushforward the value # skip if already computed at the point p 
   if !fwd_pass_ran(u_to_j,u,p)
-    @warn "You are not calling the forward pass before computing HVP's"
+    @warn "You are not calling the forward pass (objective) before computing HVP's"
     j = u_to_j(u,p) # will also update ∂j∂u_vec and ∂j∂φ_vec
   end 
 
@@ -155,7 +161,7 @@ function ChainRulesCore.rrule(u_to_j::StateParamMap,uᵋ::Vector{ForwardDiff.Dua
     # pullback the value # skip if already computed at the point p
     dJ = ForwardDiff.value(dJᵋ)
     if !bwd_pass_ran(u_to_j,u,p)
-      @warn "You are not calling the backwards pass before computing HVP's"
+      @warn "You are not calling the backwards pass (objective) before computing HVP's"
       _, ∂j∂u_vec, ∂j∂φ_vec = GridapTopOpt.pullback(u_to_j,u,p,dJ) 
     end
 
