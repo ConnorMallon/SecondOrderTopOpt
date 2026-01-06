@@ -109,7 +109,7 @@ using Gridap, GridapTopOpt, Zygote, Optim, ForwardDiff
       push!(jcs,j+c)
       end
     end
-    [j+c]
+    [j+0.4c]
   end
 
   reinit!(ls_evo,φh)
@@ -180,9 +180,17 @@ K = assemble_matrix((u,v)->a_hilb1(u,v,p0),V_φ,V_φ)
 
 using Krylov
 
-#x = Krylov.cg_lanczos_shift(K,p0,[1e-4],M=K,verbose=2,check_curvature=true)
+x = Krylov.cg_lanczos_shift(A,M=K,p0,[1.0],verbose=2)#,check_curvature=true)
 
-x_sol = Krylov.cg_lanczos(A,p0,verbose=1,check_curvature=true)
+
+
+
+
+
+v= x[2].indefinite
+#x_sol = Krylov.cg_lanczos(A,p0,verbose=1,check_curvature=true)
+i = findlast(==(0),v)
+
 
 x_sol[2].status == "negative curvature" 
 
@@ -193,7 +201,7 @@ sum(x_sol[1])
 # where do we hook in ???
 
 
-pcfs = CustomPDEConstrainedFunctionals(p_to_j,0,diff_order=2)
+pcfs = CustomPDEConstrainedFunctionals(p_to_j,0,diff_order=1)
 
 ## Hilbertian extension-regularisation problems
 α = α_coeff*maximum(el_Δ)
@@ -202,14 +210,15 @@ vel_ext = VelocityExtension(a_hilb,U_reg,V_reg)
 
 ## Optimiser
 optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,φh;
-  γ,verbose=true,constraint_names=[])
+  γ,verbose=true,constraint_names=[],maxiter=100)
 for (it,uh,φh) in optimiser
   data = ["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh]
   #iszero(it % iter_mod) && writevtk("out$it",cellfields=data)
   write_history("history.txt",optimiser.history)
 end
-it = get_history(optimiser).niter; uh = get_state(pcfs)
-writevtk(Ω,path*"out$it",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh])
+it = get_history(optimiser).niter
+uh = get_state(pcfs)
+writevtk(Ω,"out$it",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh))])
 
 
 
