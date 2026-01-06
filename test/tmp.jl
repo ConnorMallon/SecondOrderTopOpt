@@ -61,7 +61,7 @@ f(x) = -((x[1] - 0.5)^2 / ae^2 + (x[2] - 0.5)^2 / be^2 - 1.0)
 φhf = interpolate(f,V_φ)
 #writevtk(Ω,path*"outS",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"Hφf"=>(H∘φhf)])
   
-φh = interpolate(initial_lsf(4,0.2),V_φ)
+#φh = interpolate(initial_lsf(4,0.2),V_φ)
 
 
 ## Finite difference solver and level set function
@@ -78,8 +78,8 @@ l(v,φ) = ∫(v)dΓ_N
 reinit!(ls_evo,φh)
 reinit!(ls_evo,φhf)
 ## Optimisation functionals
-J(u,φ) = ∫((I ∘ φ)*κ*∇(u)⋅∇(u))dΩ
-#J(u,φ) = ∫((φ-φhf)*(φ-φhf)+0*u)dΩ
+#J(u,φ) = ∫((I ∘ φ)*κ*∇(u)⋅∇(u))dΩ
+J(u,φ) = ∫((φ-φhf)*(φ-φhf)+0*u)dΩ
 dJ(q,u,φ) = ∫(κ*∇(u)⋅∇(u)*q*(DH ∘ φ)*(norm ∘ ∇(φ)))dΩ;
 Vol(u,φ) = ∫(1e-5((ρ ∘ φ)+0*u)/vol_D)dΩ;
 #Vol(u,φ) = ∫(((φ)*(φ)+0*u)/vol_D)dΩ;
@@ -109,7 +109,7 @@ function φ_to_jc(φ)
   #u=u0.*φ[1]
   j = objective(u,φ)
   c = constraint(u,φ)
-  [j+1e4c]
+  [j]#+1e4c]
 end
 pcfs = CustomPDEConstrainedFunctionals(φ_to_jc,0,diff_order=2)
 
@@ -143,9 +143,9 @@ Hṗ(p,ṗ) =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
 
 ## Optimiser
 
-γ2 = 0.1#γ
+γ2 = 1.0#γ
 optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,φh;
-  γ=γ2,verbose=true,constraint_names=[],maxiter=100)
+  γ=γ2,verbose=true,constraint_names=[],maxiter=10)
 js = []
 for (it,uh,φh) in optimiser
   push!(js,φ_to_jc(φh.free_values)[1])
@@ -159,12 +159,12 @@ sum(∫(H∘φh)dΩ)
 u = state_map(φh.free_values)
 uh = FEFunction(U,u)
  
-
+φh.fe_space
 
 using Pkg
 Pkg.activate("postproc"; shared=true)
 using Plots
-plot()
+#plot()
 plot!(1:length(js),js,title="Objective functional J",xlabel="Iteration",ylabel="J")
 it = get_history(optimiser).niter; uh = get_state(pcfs)
 writevtk(Ω,path*"outF2",cellfields=["φ"=>φh,"I(φ)"=>(I ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh))])
