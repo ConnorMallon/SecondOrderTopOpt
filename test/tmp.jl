@@ -60,6 +60,8 @@ f(x) = -((x[1] - 0.5)^2 / ae^2 + (x[2] - 0.5)^2 / be^2 - 1.0)
 φh = interpolate(f0,V_φ)
 φhf = interpolate(f,V_φ)
 #writevtk(Ω,path*"outS",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"Hφf"=>(H∘φhf)])
+  
+φh = interpolate(initial_lsf(4,0.2),V_φ)
 
 
 ## Finite difference solver and level set function
@@ -68,7 +70,7 @@ reinit = FiniteDifferenceReinitialiser(FirstOrderStencil(2,Float64),model,V_φ;t
 ls_evo = LevelSetEvolution(evo,reinit)
 
 ## Interpolation and weak form
-interp = SmoothErsatzMaterialInterpolation(η = η_coeff*maximum(el_Δ))
+interp = SmoothErsatzMaterialInterpolation(η = 1*η_coeff*maximum(el_Δ))
 I,H,DH,ρ = interp.I,interp.H,interp.DH,interp.ρ
 a(u,v,φ) = ∫((I ∘ φ)*κ*∇(u)⋅∇(v))dΩ
 l(v,φ) = ∫(v)dΓ_N
@@ -76,10 +78,15 @@ l(v,φ) = ∫(v)dΓ_N
 reinit!(ls_evo,φh)
 reinit!(ls_evo,φhf)
 ## Optimisation functionals
-# J(u,φ) = ∫((I ∘ φ)*κ*∇(u)⋅∇(u))dΩ
-J(u,φ) = ∫((φ-φhf)*(φ-φhf)+0*u)dΩ
+J(u,φ) = ∫((I ∘ φ)*κ*∇(u)⋅∇(u))dΩ
+#J(u,φ) = ∫((φ-φhf)*(φ-φhf)+0*u)dΩ
 dJ(q,u,φ) = ∫(κ*∇(u)⋅∇(u)*q*(DH ∘ φ)*(norm ∘ ∇(φ)))dΩ;
-Vol(u,φ) = ∫(((ρ ∘ φ) - vf+0*u)/vol_D)dΩ;
+Vol(u,φ) = ∫(1e-5((ρ ∘ φ)+0*u)/vol_D)dΩ;
+#Vol(u,φ) = ∫(((φ)*(φ)+0*u)/vol_D)dΩ;
+
+
+
+
 dVol(q,u,φ) = ∫(-1/vol_D*q*(DH ∘ φ)*(norm ∘ ∇(φ)))dΩ
 
 
@@ -98,21 +105,18 @@ constraint = StateParamMap(Vol,state_map,diff_order=2)
 
 u0 = zero(U).free_values
 function φ_to_jc(φ)
-  #u = state_map(φ)
-  u=u0.*φ[1]
+  u = state_map(φ)
+  #u=u0.*φ[1]
   j = objective(u,φ)
-  #c = constraint(u,φ)
-  [j]
+  c = constraint(u,φ)
+  [j+1e4c]
 end
 pcfs = CustomPDEConstrainedFunctionals(φ_to_jc,0,diff_order=2)
 
 ## Hilbertian extension-regularisation problems
-α = 0*α_coeff*maximum(el_Δ)
+α = 0.0*α_coeff*maximum(el_Δ)
 a_hilb(p,q) =∫(α^2*∇(p)⋅∇(q) + p*q)dΩ;
 vel_ext = VelocityExtension(a_hilb,U_reg,V_reg)
-
-
-
 
 using Krylov, LinearMaps, ForwardDiff, Zygote
 reinit!(ls_evo,φh)
@@ -127,31 +131,42 @@ Hṗ(p,ṗ) =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
 #A = LinearMap((x)->Hṗ(p0,x),length(p0),length(p0))
 #x = Krylov.cg(A,p0,verbose=2,itmax=100)
 
-dp = ∇f(φh.free_values)
-Hṗ_map = LinearMap((x)->Hṗ(p0,x),length(p0),length(p0)) 
-dJ_newton_results = Krylov.cg(Hṗ_map,dp,verbose=1)#,λ=1.0)
-dJ_newton = dJ_newton_results[1]
+# u0h = one(U)
+# d2Vdφ2 = Gridap.hessian(φ->Vol(u0h,φ),φh)
+# assem_∂2Vdφ2 = SparseMatrixAssembler(V_φ,V_φ)
+# d2Vdφ2_mat = assemble_matrix(d2Vdφ2,assem_∂2Vdφ2,V_φ,V_φ)
 
-
+# dp = ∇f(φh.free_values)
+# Hṗ_map = LinearMap((x)->Hṗ(p0,x),length(p0),length(p0)) 
+# dJ_newton_results = Krylov.cg(Hṗ_map,dp,verbose=1,itmax=100,radius=0.1)#,λ=1.0)
+# dJ_newton = dJ_newton_results[1]
 
 ## Optimiser
 
-γ2 = 1.0#γ
+γ2 = 0.1#γ
 optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,φh;
-  γ=γ2,verbose=true,constraint_names=[],maxiter=10)
+  γ=γ2,verbose=true,constraint_names=[],maxiter=100)
 js = []
 for (it,uh,φh) in optimiser
   push!(js,φ_to_jc(φh.free_values)[1])
-  data = ["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh))]
+  data = ["φ"=>φh,"I(φ)"=>(I ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh))]
   iszero(it % iter_mod) && writevtk(Ω,path*"out$it",cellfields=data)
   write_history(path*"/history.txt",optimiser.history)
 end
 
+
+sum(∫(H∘φh)dΩ)
+u = state_map(φh.free_values)
+uh = FEFunction(U,u)
+ 
+
+
 using Pkg
 Pkg.activate("postproc"; shared=true)
 using Plots
-plot(1:length(js),js,title="Objective functional J",xlabel="Iteration",ylabel="J")
+plot()
+plot!(1:length(js),js,title="Objective functional J",xlabel="Iteration",ylabel="J")
 it = get_history(optimiser).niter; uh = get_state(pcfs)
-writevtk(Ω,path*"outF2",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh))])
+writevtk(Ω,path*"outF2",cellfields=["φ"=>φh,"I(φ)"=>(I ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh))])
 
 end
