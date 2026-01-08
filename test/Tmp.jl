@@ -76,7 +76,7 @@ a_hilb(p,q) =∫(α^2*∇(p)⋅∇(q) + p*q)dΩ;
 vel_ext = VelocityExtension(a_hilb,U_reg,V_reg)
 
 p0 = get_free_dof_values(φh)
-a_hilb1(p̃,q,p) =∫(4*α0^2*∇(p̃)⋅∇(q) + p̃*q)dΩ
+a_hilb1(p̃,q,p) =∫(α0^2*∇(p̃)⋅∇(q) + p̃*q)dΩ
 l_hilb1(q,p) = ∫(q*p)dΩ
 
 opf = AffineFEOperator((p,q)->a_hilb1(p,q,φhf),q->l_hilb1(q,φhf),V_φ,V_φ)
@@ -97,7 +97,7 @@ uhf = solve(opf)
 op0 = AffineFEOperator((u,v)->a(u,v,φh_filtered),v->l(v,φh_filtered),U,V)
 uh0 = solve(op0)
 
-J(u,φ) = ∫(1e8*(u-uhf)*(u-uhf)+0*φ)dΩ #+ ∫(1e-8*∇(φ)⋅∇(φ))dΩ
+J(u,φ) = ∫(1e8*(u-uhf)*(u-uhf)+0*φ)dΩ + ∫(1e-6*∇(φ)⋅∇(φ))dΩ
 
 @show sum(J(uh0,φh_filtered))
 
@@ -105,8 +105,8 @@ state_map = AffineFEStateMap(a,l,U,V,V_φ,diff_order = 2 )
 objective = StateParamMap(J,state_map,diff_order=2)
 
 function φ_to_jc(φ_)
-#   φ = hilb_filter(φ_)
-φ = φ_
+  #φ = hilb_filter(φ_)
+  φ = φ_
   u = state_map(φ.+1e-6)
   j = objective(u,φ)
   [j]
@@ -163,30 +163,16 @@ using NLopt
 
 
 using NLopt
+_it = [0]
 function my_objective_fn(x::Vector, grad::Vector)
-    #if length(grad) > 0
+    if length(grad) > 0
         F,Gs = Zygote.withgradient(p->φ_to_jc(p)[1], x)
         copyto!(grad, Gs[1])
-    #end
-    @show sum(x)
-    @show sum(grad)
+    end
+    println("Objective: ",F[1],"iteration" , _it[1])
+    _it[1] = _it[1] + 1
     return F[1]
 end
-
-my_objective_fn(p0,zeros(length(p0)))
-
-F,Gs =  Zygote.withgradient(p->φ_to_jc(p)[1], p0)
-sum(Gs[1])
-F
-
-
-p0 = φh.free_values
-my_objective_fn(p0,zero(p0))
-φ_to_jc(φh.free_values)
-
-
-
-φ_to_jc(φh.free_values)
 
 opt = NLopt.Opt(:LD_LBFGS, length(p0))
 NLopt.xtol_rel!(opt, 0)
@@ -198,11 +184,10 @@ min_f, min_x, ret = NLopt.optimize(opt, φh.free_values)
 num_evals = NLopt.numevals(opt)
 @show ret
 
-
-
-
-
-
+φhfinal = FEFunction(V_φ,min_x)
+op0 = AffineFEOperator((u,v)->a_hilb1(u,v,φhfinal),v->l_hilb1(v,φhfinal),V_φ,V_φ)
+φh_filtered = solve(op0)
+writevtk(Ω,path*"outFopt",cellfields=["φ"=>φhfinal])
 
 
 # ## Hilbertian extension-regularisation problems
