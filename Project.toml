@@ -20,7 +20,6 @@ LinearMaps = "7a12625a-238d-50fd-b39a-03d52299707e"
 NLSolversBase = "d41bc354-129a-5804-8e4c-c37616107c6c"
 NLopt = "76087f3c-5699-56af-9a33-bf431cd00edd"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
-OptimizationSciPy = "cce07bd8-c79b-4b00-aee8-8db9cce22837"
 Preconditioners = "af69fa37-3177-5a40-98ee-561f696e4fcd"
 
 [compat]
@@ -40,5 +39,4 @@ LinearMaps = "3.11.4"
 NLSolversBase = "7.10.0"
 NLopt = "1.2.1"
 Optim = "1.13.2"
-OptimizationSciPy = "0.4.5"
 Preconditioners = "0.6.1"
