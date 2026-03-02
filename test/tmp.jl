@@ -1,249 +1,227 @@
-module tmp
+module ThermalCutFEMTest
+using Test
+using Gridap, Gridap.Adaptivity, Gridap.Geometry
+using GridapEmbedded, GridapEmbedded.LevelSetCutters
+using GridapTopOpt, GridapSolvers
 
+using GridapTopOpt: StateParamMap
 
-using Pkg
-Pkg.activate(".")
-using Gridap, GridapTopOpt
-using SecondOrderTopOpt
-using Krylov, LinearMaps, ForwardDiff, Zygote
-using Optim
+  # Params
+  n = 10            # Initial mesh size (pre-refinement)
+  max_steps = 10/n  # Time-steps for evolution equation
+  vf = 0.3          # Volume fraction
+  α_coeff = 2       # Regularisation coefficient extension-regularisation
 
+  # Model and some refinement
+  _model = CartesianDiscreteModel((0,1,0,1),(n,n))
+  base_model = UnstructuredDiscreteModel(_model)
+  ref_model = refine(base_model, refinement_method = "barycentric")
+  #ref_model = refine(ref_model)
+  #ref_model = refine(ref_model)
+  model = get_model(ref_model)
+  h = minimum(get_element_diameters(model))
+  hₕ = get_element_diameter_field(model)
+  f_Γ_D(x) = (x[1]-0.5)^2 + (x[2]-0.5)^2 <= 0.05^2
+  f_Γ_N(x) = ((x[1] ≈ 0 || x[1] ≈ 1) && (0.2 <= x[2] <= 0.3 + eps() || 0.7 - eps() <= x[2] <= 0.8)) ||
+    ((x[2] ≈ 0 || x[2] ≈ 1) && (0.2 <= x[1] <= 0.3 + eps() || 0.7 - eps() <= x[1] <= 0.8))
+  update_labels!(1,model,f_Γ_D,"Omega_D")
+  update_labels!(2,model,f_Γ_N,"Gamma_N")
 
-path = "./results/thermal_compliance_ALM/"
+  ## Levet-set function space and derivative regularisation space
+  reffe_scalar = ReferenceFE(lagrangian,Float64,1)
+  V_reg = TestFESpace(model,reffe_scalar;dirichlet_tags=["Omega_D","Gamma_N"])
+  U_reg = TrialFESpace(V_reg)
+  V_φ = TestFESpace(model,reffe_scalar)
 
-## Parameters
-order = 1
-xmax=ymax=1.0
-prop_Γ_N = 0.2
-prop_Γ_D = 0.2
-dom = (0,xmax,0,ymax)
-el_size = (50,50)
-γ = 0.1
-γ_reinit = 0.5
-max_steps = floor(Int,order*minimum(el_size)/10)
-tol = 1/(5*order^2)/minimum(el_size)
-κ = 1
-vf = 0.4
-η_coeff = 2
-α_coeff = 4max_steps*γ
-iter_mod = 10
-mkpath(path)
+  ## Level-set function
+  f1 = (x,y) -> -cos(6π*(x-1/12))*cos(6π*(y-1/12))-0.5
+  f2 = (x,y) -> -cos(6π*(x-3/12))*cos(6π*(y-1/12))-0.5
+  f3 = (x,y) -> (x-0.5)^2 + (y-0.5)^2 - 0.06^2
+  f((x,y)) = min(max(f1(x,y),f2(x,y)),f3(x,y))
+  φh = interpolate(f,V_φ)
 
-## FE Setup
-model = CartesianDiscreteModel(dom,el_size);
-el_Δ = get_el_Δ(model)
-f_Γ_D(x) = (x[1] ≈ 0.0 && (x[2] <= ymax*prop_Γ_D + eps() ||
-    x[2] >= ymax-ymax*prop_Γ_D - eps()))
-f_Γ_N(x) = (x[1] ≈ xmax && ymax/2-ymax*prop_Γ_N/2 - eps() <= x[2] <=
-    ymax/2+ymax*prop_Γ_N/2 + eps())
-update_labels!(1,model,f_Γ_D,"Gamma_D")
-update_labels!(2,model,f_Γ_N,"Gamma_N")
+  # Check LS
+  GridapTopOpt.correct_ls!(φh)
 
-## Triangulations and measures
-Ω = Triangulation(model)
-Γ_N = BoundaryTriangulation(model,tags="Gamma_N")
-dΩ = Measure(Ω,2*order)
-dΓ_N = Measure(Γ_N,2*order)
-vol_D = sum(∫(1)dΩ)
+  ## Triangulations and measures
+  Ω_bg = Triangulation(model)
+  Γ_N = BoundaryTriangulation(model,tags="Gamma_N")
+  dΩ_bg = Measure(Ω_bg,2)
+  dΓ_N = Measure(Γ_N,2)
+  vol_D = sum(∫(1)dΩ_bg)
 
-## Spaces
-reffe_scalar = ReferenceFE(lagrangian,Float64,order)
-V = TestFESpace(model,reffe_scalar;dirichlet_tags=["Gamma_D"])
-U = TrialFESpace(V,0.0)
-V_φ = TestFESpace(model,reffe_scalar)
-V_reg = TestFESpace(model,reffe_scalar;dirichlet_tags=["Gamma_N"])
-U_reg = TrialFESpace(V_reg,0)
+  Ωs = EmbeddedCollection(model,φh) do cutgeo,cutgeo_facets,_φh
+    Ωin = DifferentiableTriangulation(Triangulation(cutgeo,PHYSICAL),V_φ)
+    Γ = DifferentiableTriangulation(EmbeddedBoundary(cutgeo),V_φ)
+    Γg = GhostSkeleton(cutgeo)
+    Ωact = Triangulation(cutgeo,ACTIVE)
 
-## Create FE functions
-#initial_lsf(1.4,0.4)
-ae = 0.3
-be = 0.2
-f0(x) = -((x[1] - 0.5)^2 / be^2 + (x[2] - 0.5)^2 / ae^2 - 1.0)
-f(x) = -((x[1] - 0.5)^2 / ae^2 + (x[2] - 0.5)^2 / be^2 - 1.0)
-φh = interpolate(f0,V_φ)
-φhf = interpolate(f,V_φ)
-#writevtk(Ω,path*"outS",cellfields=["φ"=>φh,"φf"=>φhf,"H(φ)"=>(H ∘ φh),"Hφf"=>(H∘φhf)])
-
-#φh = interpolate(initial_lsf(4,0.2),V_φ)
-
-
-## Finite difference solver and level set function
-evo = FiniteDifferenceEvolver(FirstOrderStencil(2,Float64),model,V_φ;max_steps)
-reinit = FiniteDifferenceReinitialiser(FirstOrderStencil(2,Float64),model,V_φ;tol,γ_reinit)
-ls_evo = LevelSetEvolution(evo,reinit)
-
-## Interpolation and weak form
-interp = SmoothErsatzMaterialInterpolation(η = 5*η_coeff*maximum(el_Δ))
-I,H,DH,ρ = interp.I,interp.H,interp.DH,interp.ρ
-a(u,v,φ) = ∫((I∘φ)*κ*∇(u)⋅∇(v))dΩ
-l(v,φ) = ∫(v)dΓ_N
-
-op0 = AffineFEOperator((u,v)->a(u,v,φhf),v->l(v,φhf),U,V)
-uhf = solve(op0)
-
-# reinit!(ls_evo,φh)
-# reinit!(ls_evo,φhf)
-
-
-## Optimisation functionals
-#J(u,φ) = ∫((I ∘ φ)*κ*∇(u)⋅∇(u))dΩ
-#J(u,φ) = ∫((φ-φhf)*(φ-φhf)+0*u)dΩ
-J(u,φ) = ∫((u-uhf)*(u-uhf)+0*φ)dΩ
-#dJ(q,u,φ) = ∫(κ*∇(u)⋅∇(u)*q*(DH ∘ φ)*(norm ∘ ∇(φ)))dΩ;
-Vol(u,φ) = ∫(1e-5((ρ ∘ φ)+0*u)/vol_D)dΩ;
-#Vol(u,φ) = ∫(((φ)*(φ)+0*u)/vol_D)dΩ;
-#Vol(u,φ) = ∫(((ρ ∘ φ) - vf+0*u)*((ρ ∘ φ) - vf))dΩ;
+    Ωc = Triangulation(cutgeo,CUT)
+    # Isolated volumes
+    φ_cell_values = get_cell_dof_values(_φh)
+    χ,_ = get_isolated_volumes_mask_polytopal(model,φ_cell_values,["Omega_D",])
+    (;
+      :Ωin  => Ωin,
+      :dΩin => Measure(Ωin,2),
+      :Γg   => Γg,
+      :dΓg  => Measure(Γg,2),
+      :n_Γg => get_normal_vector(Γg),
+      :Γ    => Γ,
+      :dΓ   => Measure(Γ,2),
+      :n_Γ  => get_normal_vector(Γ),
+      :Ωact => Ωact,
+      :Ωc   => Ωc,
+      :χ => χ
+    )
+  end
 
 
 
+  ## Weak form
+  γg = 0.1
+  a(u,v,φ) = ∫(∇(v)⋅∇(u))Ωs.dΩin +
+    ∫((γg*mean(hₕ))*jump(Ωs.n_Γg⋅∇(v))*jump(Ωs.n_Γg⋅∇(u)))Ωs.dΓg +
+    ∫(Ωs.χ*v*u)Ωs.dΩin
+  l(v,φ) = ∫(v)dΓ_N
 
-dVol(q,u,φ) = ∫(-1/vol_D*q*(DH ∘ φ)*(norm ∘ ∇(φ)))dΩ
+  ## Optimisation functionals
+  J(u,φ) = ∫(∇(u)⋅∇(u))Ωs.dΩin
+  Vol(u,φ) = ∫(1/vol_D)Ωs.dΩin - ∫(vf/vol_D)dΩ_bg
+  dVol(q,u,φ) = ∫(-1/vol_D*q/(abs(Ωs.n_Γ ⋅ ∇(φ))))Ωs.dΓ
+
+  ## FE operators
+  state_collection = EmbeddedCollection_in_φh(model,φh) do _φh
+    update_collection!(Ωs,_φh)
+    V = TestFESpace(Ωs.Ωact,reffe_scalar;dirichlet_tags=["Omega_D"])
+    U = TrialFESpace(V,0.0)
+    state_map = AffineFEStateMap(a,l,U,V,V_φ)
+    (;
+      :state_map => state_map,
+      :J => StateParamMap(J,state_map),
+      :C => map(Ci -> StateParamMap(Ci,state_map),[Vol,])
+    )
+  end
+
+  function φ_to_jc(φ)
+    u = state_collection.state_map(φ)
+    j = state_collection.J(u,φ)
+    c = map(constrainti -> constrainti(u,φ),state_collection.C)
+    [j,c...]
+  end
 
 
-## Setup solver and FE operators
-state_map = AffineFEStateMap(a,l,U,V,V_φ,diff_order = 2 )
-#pcfs = PDEConstrainedFunctionals(J,[Vol],state_map)#,analytic_dJ=dJ,analytic_dC=[dVol])
+  function p_to_j(φ)
+    u = state_collection.state_map(φ)
+    j = state_collection.J(u,φ)
+  end
 
-objective = StateParamMap(J,state_map,diff_order=2)
-constraint = StateParamMap(Vol,state_map,diff_order=2)
-# function φ_to_jc(φ)
-#   u = state_map(φ)
-#   j = objective(u,φ)
-#   c = constraint(u,φ)
-#   [j+c]
-# end
+ 
+  ## Evolution Method
+  evo = CutFEMEvolver(V_φ,dΩ_bg,hₕ;max_steps,γg=0.1)
+  reinit = StabilisedReinitialiser(V_φ,dΩ_bg,hₕ;stabilisation_method=ArtificialViscosity(2.0))
+  ls_evo = LevelSetEvolution(evo,reinit)
+  reinit!(ls_evo,φh)
 
-## Hilbertian extension-regularisation problems
-α0 = α_coeff*maximum(el_Δ)
-α = α0*0
-a_hilb(p,q) =∫(α^2*∇(p)⋅∇(q) + p*q)dΩ;
-vel_ext = VelocityExtension(a_hilb,U_reg,V_reg)
+  # ## Hilbertian extension-regularisation problems
+  # α = (α_coeff)^2*hₕ*hₕ
+  # a_hilb(p,q) =∫(α*∇(p)⋅∇(q) + p*q)dΩ_bg;
+  # vel_ext = VelocityExtension(a_hilb,U_reg,V_reg)
 
-#reinit!(ls_evo,φh)
-p0 = get_free_dof_values(φh)
-a_hilb1(p̃,q,p) =∫(α0^2*∇(p̃)⋅∇(q) + p̃*q)dΩ
-l_hilb1(q,p) = ∫(q*p)dΩ
-hilb_filter = AffineFEStateMap(a_hilb1,l_hilb1,V_φ,V_φ,V_φ,diff_order=2)
-K = assemble_matrix((u,v)->a_hilb1(u,v,p0),V_φ,V_φ)
+  # ## Optimiser
+  # optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,φh;verbose=true,constraint_names=[:Vol])
 
-u0 = zero(U).free_values
-function φ_to_jc(φ_)
-  #φ = hilb_filter(φ_)
-  φ = φ_
-  u = state_map(φ)
-  #u=u0.*φ[1]
-  j = objective(u,φ)
-  #c = constraint(u,φ)
-  [j]#+1e4c]
-end
+  
 
-∇f = p->Zygote.gradient(p->φ_to_jc(p)[1],p)[1]
+  update_collection!(Ωs,φh)
+  Ωc = Ωs.Ωc
+  writevtk(Ωc,"Ωc")
+  reinit!(ls_evo,φh)
+  writevtk(Ω_bg,"tmp",cellfields=["φh"=>φh])
+  
+
+
+state_map = state_collection.state_map
+U = state_map.spaces[1]
+uh = zero( U)
+∂2R∂u2 = Gridap.hessian(uh->a(uh,uh,φh),uh) 
+
+
+
+using Zygote, ForwardDiff
+using LinearMaps, IterativeSolvers
+
+∇f = p->Zygote.gradient(p->p_to_j(p)[1],p)[1]
 Hṗ(p,ṗ) =  ForwardDiff.derivative(α -> ∇f(p + α*ṗ), 0)
 
-γ2 = 0.1
-pcfs = CustomPDEConstrainedFunctionals(φ_to_jc,0)#,diff_order=2)
-optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,φh;
-  γ=γ2,verbose=true,constraint_names=[],maxiter=100)
-js = []
-for (it,uh,φh) in optimiser
-  push!(js,φ_to_jc(φh.free_values)[1])
-  data = ["φ"=>φh,"I(φ)"=>(I ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh))]
-  iszero(it % iter_mod) && writevtk(Ω,path*"out$it",cellfields=data)
-  write_history(path*"/history.txt",optimiser.history)
-end
-
-writevtk(Ω,path*"outF21",cellfields=["φ"=>φh,"I(φ)"=>(I ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh))])
 
 
 
+p0 = ∇f(φh.free_values)
+update_collection!(Ωs,φh)
 
 
-# γ2 = 0.1
-# pcfs2 = CustomPDEConstrainedFunctionals(φ_to_jc,0,diff_order=2)
-# α = 0α_coeff*maximum(el_Δ)
-# a_hilb(p,q) =∫(α^2*∇(p)⋅∇(q) + p*q)dΩ;
-# vel_ext = VelocityExtension(a_hilb,U_reg,V_reg)
+# in the direction of the normal only ? 
+Hṗ(p0,p0)
 
-# # optimiser = AugmentedLagrangian(pcfs2,ls_evo,vel_ext,φh;
-# #   γ=γ2,verbose=true,constraint_names=[],maxiter=5)
-# # for (it,uh,φh) in optimiser
-# #   push!(js,φ_to_jc(φh.free_values)[1])
-# #   data = ["φ"=>φh,"I(φ)"=>(I ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh))]
-# #   iszero(it % iter_mod) && writevtk(Ω,path*"out$it",cellfields=data)
-# #   write_history(path*"/history.txt",optimiser.history)
-# # end
-
-using Optim
-using Pkg
-Pkg.activate("postproc"; shared=true)
-using Plots
-plot()
-plot!(1:length(js),js,title="Objective functional J",xlabel="Iteration",ylabel="J")#,ylims=(0.14,0.145))
-savefig(path*"objective_history.png")
-it = get_history(optimiser).niter; uh = get_state(pcfs)
-writevtk(Ω,path*"outF2",cellfields=["φ"=>φh,"I(φ)"=>(I ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh))])
+A = LinearMap((x)->Hṗ(p0,x),length(p0),length(p0))
+A*p0
 
 
 
 
 
 
+# How could we solve it on the surface only ? 
+
+# well in function space, we have th
+#cutgeom = cut(bgmodel,geom)
+Ωc = Triangulation(cutgeom,CUT,geom)
+Γ = EmbeddedBoundary(cutgeom,geom)
+
+V_Γ = TestFESpace(Ωs.Ωc,reffe_scalar)
+U_Γ = TrialFESpace(V_Γ)
 
 
+φh
+interpolate(φh,V_Γ)
 
-# function f(x::Vector)
-#   φ_to_jc(x)[1]
-# end
-# function fg!(G,x)
-#   F,Gs = Zygote.withgradient(p->φ_to_jc(p)[1], x)
-#   copyto!(G, Gs[1])
-#   F[1]
-# end
-# function hv!(Hv, x, v)
-#   copyto!(Hv, Hṗ(x,v))
-#   Hv
-# end
-# d = Optim.TwiceDifferentiableHV(f,fg!,hv!,p0)
-# result = Optim.optimize(d, p0, Optim.KrylovTrustRegion(),
-#             Optim.Options(g_tol = 1e-12,
-#                           iterations = 100,
-#                           show_trace = true,
-#                           store_trace = true,
-#               ))
-
-# function g!(G,x)
-#   F,Gs = Zygote.withgradient(p->φ_to_jc(p)[1], x)
-#   copyto!(G, Gs[1])
-#   G
-# end
-# results = Optim.optimize(f,g!,p0,Optim.BFGS())
-
-# g!(p0,p0)
-# f(p0)
-# p0
-
-# x0 = [0.0, 0.0]
-# f2(x) = (1.0 - x[1])^2 + 100.0 * (x[2] - x[1]^2)^2
-# function g2!(G, x)
-#     G[1] = -2.0 * (1.0 - x[1]) - 400.0 * (x[2] - x[1]^2) * x[1]
-#     G[2] = 200.0 * (x[2] - x[1]^2)
-# end
-# optimize(f2, g2!, x0, LBFGS())
+A*p0
 
 
-# # ,
-# #             Optim.Options(g_tol = 1e-12,
-# #                           iterations = 100,
-# #                           show_trace = true,
-# #                           store_trace = true,
-# #               ))
-# pf = result.minimizer
-# pfh = FEFunction(V_φ,pf)
-# writevtk(Ω,path*"outKrylov",cellfields=["φ"=>pfh])
+H*p0 
+
+
+# gives a φ on Ω ....
+# do we smooth it before trying to HVP ? 
+# perhaps afterwards...
+
+# also we want to make sure we are UPDATING? in the 
+# the most reduced space.... 
+# 
 
 
 
 
+
+
+
+minres(A,p0)
+
+
+
+
+# Hessian times a vector on the surface only is it possible...
+
+# 
+
+
+
+  
+
+
+  #pcfs = CustomEmbeddedPDEConstrainedFunctionals(φ_to_jc,1,state_collection)
+
+  
 
 
 

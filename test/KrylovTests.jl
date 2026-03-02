@@ -4,7 +4,7 @@ using Optim
 using Gridap
 using GridapTopOpt
 using Test
-using SecondOrderTopOpt
+#using SecondOrderTopOpt
 
 ## Parameters
 order = 1
