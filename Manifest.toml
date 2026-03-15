@@ -764,7 +764,9 @@ version = "0.6.1"
 
 [[deps.GridapTopOpt]]
 deps = ["BenchmarkTools", "BlockArrays", "ChainRulesCore", "CircularArrays", "DataStructures", "DelimitedFiles", "FillArrays", "FiniteDiff", "ForwardDiff", "Gridap", "GridapDistributed", "GridapEmbedded", "GridapGmsh", "GridapPETSc", "GridapSolvers", "JLD2", "LinearAlgebra", "MPI", "PartitionedArrays", "Printf", "ReverseDiff", "STLCutters", "SparseMatricesCSR", "Zygote"]
-path = "/home/mallon2/Documents/GridapTopOpt.jl"
+git-tree-sha1 = "d1e008b82fc9a14a3da8ec47cab1186b5c4ad45a"
+repo-rev = "so-wo-pc"
+repo-url = "https://github.com/ConnorMallon/GridapTopOpt.jl"
 uuid = "27dd0110-1916-4fd6-8b4b-1bc109db1170"
 version = "0.4.2"
 
