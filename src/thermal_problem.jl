@@ -1,13 +1,4 @@
-module temp
-
-using Gridap, GridapTopOpt
-using SecondOrderTopOpt
-
-
-
-  #function run_thermal_compliance(params)
-
-
+function problem_from_physics(θ, ::Val{:thermal}) 
   """
     (Serial) Minimum thermal compliance with augmented Lagrangian method in 2D with nonlinear diffusivity.
 
@@ -95,13 +86,15 @@ using SecondOrderTopOpt
   l_hilb(q,φ) = ∫(q*φ)dΩ
   filter = AffineFEStateMap(a_hilb,l_hilb,V_φ,V_φ,V_φ,diff_order=2)
 
-  using SecondOrderTopOpt 
   φh = interpolate(initial_lsf(4,0.2),V_φ)
   writevtk(Ω,"data/initial",cellfields=["φh"=>φh])
 
   V_reg = TestFESpace(model,reffe_scalar;dirichlet_tags=["Gamma_N"])
   U_reg = TrialFESpace(V_reg,0)
   vel_ext = VelocityExtension((p,q)->a_hilb(p,q,φh),U_reg,V_reg)
+
+  p0 = φh.free_values
+  optimisation_problem = OptimisationProblem(pcfs,filter,ls_evo,interp,p0)
 
 #   ## Optimiser
 #   optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,φh;
@@ -115,7 +108,8 @@ using SecondOrderTopOpt
 #   writevtk(Ω,"data/tmpout$it",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh])
 # end
 
-  optimiser = Optim_KrylovTrustRegion(pcfs,filter,ls_evo)
-  result = optimise(optimiser,φh.free_values,I)
-  return result
+  # optimiser = Optim_KrylovTrustRegion(pcfs,filter,ls_evo)
+  # result = optimise(optimiser,φh.free_values)
+  # return result
 
+end

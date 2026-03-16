@@ -1,25 +1,23 @@
-using Gridap, GridapTopOpt
-using SecondOrderTopOpt 
 
+  function problem_from_physics(θ, ::Val{:elastic})
+  """
+    (Serial) Minimum elastic compliance with augmented Lagrangian method in 2D.
 
-"""
-  (Serial) Minimum elastic compliance with augmented Lagrangian method in 2D.
-
-  Optimisation problem:
-      Min J(Ω) = ∫ C ⊙ ε(u) ⊙ ε(u) dΩ
-        Ω
-    s.t., Vol(Ω) = vf,
-          ⎡u∈V=H¹(Ω;u(Γ_D)=0)ᵈ,
-          ⎣∫ C ⊙ ε(u) ⊙ ε(v) dΩ = ∫ v⋅g dΓ_N, ∀v∈V.
-"""
-#function main(path=".")
-path = "data/"
+    Optimisation problem:
+        Min J(Ω) = ∫ C ⊙ ε(u) ⊙ ε(u) dΩ
+          Ω
+      s.t., Vol(Ω) = vf,
+            ⎡u∈V=H¹(Ω;u(Γ_D)=0)ᵈ,
+            ⎣∫ C ⊙ ε(u) ⊙ ε(v) dΩ = ∫ v⋅g dΓ_N, ∀v∈V.
+  """
+  #function main(path=".")
+  path = "data/"
   ## Parameters
   order = 1
   xmax,ymax=(2.0,1.0)
   prop_Γ_N = 0.2
   dom = (0,xmax,0,ymax)
-  el_size = (200,100)
+  el_size = (20,10)
   γ = 0.1
   γ_reinit = 0.5
   max_steps = floor(Int,order*minimum(el_size)/10)
@@ -81,8 +79,6 @@ path = "data/"
   state_map = AffineFEStateMap(a,l,U,V,V_φ)
   pcfs = PDEConstrainedFunctionals(J,[Vol],state_map,analytic_dJ=dJ,analytic_dC=[dVol])
 
-
-
   ## Hilbertian extension-regularisation problems
   α = α_coeff*maximum(el_Δ)
   a_hilb(p,q,φ) =∫(α^2*∇(p)⋅∇(q) + p*q)dΩ
@@ -93,6 +89,9 @@ path = "data/"
   U_reg = TrialFESpace(V_reg,0)
   vel_ext = VelocityExtension((p,q)->a_hilb(p,q,φh),U_reg,V_reg)
 
+  p0 = φh.free_values
+  optimisation_problem = OptimisationProblem(pcfs,filter,ls_evo,interp,p0)
+  
   # ## Optimiser
   # optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,φh;
   #   γ,verbose=true,constraint_names=[:Vol])
@@ -104,11 +103,10 @@ path = "data/"
   # it = get_history(optimiser).niter; uh = get_state(pcfs)
   # writevtk(Ω,path*"out$it",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh])
 
+  # optimiser = Optim_KrylovTrustRegion(pcfs,filter,ls_evo)
+  # optimise(optimiser,φh.free_values,I)
+  # return result
 
-  optimiser = Optim_KrylovTrustRegion(pcfs,filter,ls_evo)
-  optimise(optimiser,φh.free_values,I)
-  return result
-
-#i#end
-
+  return optimisation_problem
 #main()
+  end

@@ -1,2 +1,4 @@
 /results/*
 *.vtu
+/_tmp/*
+/data/*
