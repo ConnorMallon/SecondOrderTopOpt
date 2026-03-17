@@ -1,35 +1,24 @@
+function problem_from_physics(θ, ::Val{:elastic})
+  n = θ["n"]
+  η_coeff = θ["η_coeff"]
+  α_factor = θ["α_coeff"]
+  ξ_ls = θ["ξ_ls"]
 
-  function problem_from_physics(θ, ::Val{:elastic})
-  """
-    (Serial) Minimum elastic compliance with augmented Lagrangian method in 2D.
-
-    Optimisation problem:
-        Min J(Ω) = ∫ C ⊙ ε(u) ⊙ ε(u) dΩ
-          Ω
-      s.t., Vol(Ω) = vf,
-            ⎡u∈V=H¹(Ω;u(Γ_D)=0)ᵈ,
-            ⎣∫ C ⊙ ε(u) ⊙ ε(v) dΩ = ∫ v⋅g dΓ_N, ∀v∈V.
-  """
-  #function main(path=".")
-  path = "data/"
   ## Parameters
   order = 1
   xmax,ymax=(2.0,1.0)
   prop_Γ_N = 0.2
   dom = (0,xmax,0,ymax)
-  el_size = (20,10)
+  el_size = (2*n,n)
   γ = 0.1
   γ_reinit = 0.5
   max_steps = floor(Int,order*minimum(el_size)/10)
   tol = 1/(5order^2)/minimum(el_size)
   C = isotropic_elast_tensor(2,1.,0.3)
-  η_coeff = 2
-  α_coeff = 2*4max_steps*γ
+  α_coeff = α_factor*4max_steps*γ
   vf = 0.4
   g = VectorValue(0,-1)
   iter_mod = 10
-  mkpath(path)
-
   ## FE Setup
   model = CartesianDiscreteModel(dom,el_size)
   el_Δ = get_el_Δ(model)
@@ -67,7 +56,7 @@
   ## Optimisation functionals
   J(u,φ) = ∫((I ∘ φ)*(C ⊙ ε(u) ⊙ ε(u)))dΩ
   dJ(q,u,φ) = ∫((C ⊙ ε(u) ⊙ ε(u))*q*(DH ∘ φ)*(norm ∘ ∇(φ)))dΩ;
-  Vol(u,φ) = ∫(((ρ ∘ φ) - vf)/vol_D)dΩ;
+  Vol(u,φ) = ∫(((ρ ∘ φ) - vf + 0*u⋅u)/vol_D)dΩ;
   dVol(q,u,φ) = ∫(-1/vol_D*q*(DH ∘ φ)*(norm ∘ ∇(φ)))dΩ
 
   ## Finite difference solver and level set function
@@ -91,22 +80,6 @@
 
   p0 = φh.free_values
   optimisation_problem = OptimisationProblem(pcfs,filter,ls_evo,interp,p0)
-  
-  # ## Optimiser
-  # optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,φh;
-  #   γ,verbose=true,constraint_names=[:Vol])
-  # for (it,uh,φh) in optimiser
-  #   data = ["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh]
-  #   iszero(it % iter_mod) && writevtk(Ω,path*"out$it",cellfields=data)
-  #   write_history(path*"/history.txt",optimiser.history)
-  # end
-  # it = get_history(optimiser).niter; uh = get_state(pcfs)
-  # writevtk(Ω,path*"out$it",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh])
-
-  # optimiser = Optim_KrylovTrustRegion(pcfs,filter,ls_evo)
-  # optimise(optimiser,φh.free_values,I)
-  # return result
 
   return optimisation_problem
-#main()
-  end
+end

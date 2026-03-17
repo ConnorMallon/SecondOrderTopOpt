@@ -1,6 +1,7 @@
 struct OptimisationProblem 
   pcfs           #:: AbstractPDEConstrainedFunctionals
   filter            #:: Function
+  vel_ext
   ls_evo            #:: AbstractLevelSetEvolution
   interp
   φ
@@ -37,7 +38,7 @@ function construct_second_order_objective(objective::StateParamMap)
 end
 
 function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{2})
-  pcfs, filter , ls_evo, φ  = optimisation_problem.pcfs, optimisation_problem.filter, optimisation_problem.ls_evo, optimisation_problem.φ
+  pcfs, filter , vel_ext, ls_evo, φ  = optimisation_problem.pcfs, optimisation_problem.filter, optimisation_problem.vel_ext, optimisation_problem.ls_evo, optimisation_problem.φ
 
   cg_tol = θ["cg_tol"]
   rho_upper = θ["rho_upper"]
@@ -57,7 +58,7 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{2})
       if typeof(φ) == T # avoiding trying to reinit when φ is a dual
         println("reinitialising")
         φh = FEFunction(get_aux_space(state_map),φ) 
-        reinit!(ls_evo,φh)
+        #reinit!(ls_evo,φh)
       end
     end
     φ_ = filter(φ)
@@ -97,7 +98,7 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{2})
                                         iterations = max_iters,
                                         store_trace = true,
                                         show_trace = true,
-                                        extended_trace = true
+                                        #extended_trace = true
                                         ))
   φ = optim_result.minimizer
   val(optim_result) = optim_result.value
@@ -105,9 +106,13 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{2})
   return Result(state_map, trace, φ)
 end
 
-function optimise(optimisation_problem::OptimisationProblem,p,order=1)
-  pcfs, filter , ls_evo  = optimisation_problem.problem, optimisation_problem.filter, optimisation_problem.ls_evo
-  ph = FEFunction(get_aux_space(pcfs.state_map),p)
+function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{1})
+  pcfs, filter , vel_ext, ls_evo, φ  = optimisation_problem.pcfs, optimisation_problem.filter, optimisation_problem.vel_ext, optimisation_problem.ls_evo, optimisation_problem.φ
+  γ = θ["γ"]
+
+  vel_ext = 
+
+  ph = FEFunction(get_aux_space(pcfs.state_map),φ)
   optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,ph;
     γ,verbose=true,constraint_names=[:Vol])
   for (it,uh,φh) in optimiser

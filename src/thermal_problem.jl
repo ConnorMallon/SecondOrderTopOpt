@@ -1,34 +1,23 @@
 function problem_from_physics(θ, ::Val{:thermal}) 
-  """
-    (Serial) Minimum thermal compliance with augmented Lagrangian method in 2D with nonlinear diffusivity.
+  n = θ["n"]
+  η_coeff = θ["η_coeff"]
+  α_factor = θ["α_coeff"]
+  ξ_ls = θ["ξ_ls"]
 
-    Optimisation problem:
-        Min J(Ω) = ∫ κ(u)*∇(u)⋅∇(u) dΩ
-          Ω
-      s.t., Vol(Ω) = vf,
-            ⎡u∈V=H¹(Ω;u(Γ_D)=0),
-            ⎣∫ κ(u)*∇(u)⋅∇(v) dΩ = ∫ v dΓ_N, ∀v∈V.
-
-    In this example κ(u) = κ0*(exp(ξ*u))
-  """
-  #function main(path="./results/nonlinear_thermal_compliance_ALM/")
-  path="." 
   ## Parameters
   order = 1
   xmax=ymax=1.0
   prop_Γ_N = 0.2
   prop_Γ_D = 0.2
   dom = (0,xmax,0,ymax)
-  el_size = (100,100)
+  el_size = (n,n)
   γ = 0.1
   γ_reinit = 0.5
   max_steps = floor(Int,order*minimum(el_size)/10)
   tol = 1/(5order^2)/minimum(el_size)
-  η_coeff = 2
-  α_coeff = 4max_steps*γ
+  α_coeff = α_factor*4max_steps*γ
   vf = 0.4
   iter_mod = 10
-  mkpath(path)
 
   ## FE Setup
   model = CartesianDiscreteModel(dom,el_size);
@@ -68,7 +57,7 @@ function problem_from_physics(θ, ::Val{:thermal})
   state_map = AffineFEStateMap(a,l,U,V,V_φ)
 
   ## Optimisation functionals
-  J(u,φ) = ∫((I ∘ φ)*(κ)*∇(u)⋅∇(u))dΩ #+∫(5e-2*(DH ∘ φ))dΩ
+  J(u,φ) = ∫((I ∘ φ)*(κ)*∇(u)⋅∇(u))dΩ  + ∫(1e-3(DH ∘ φ))dΩ;
   Vol(u,φ) = ∫(((ρ ∘ φ) - vf + 0*u)/vol_D)dΩ;
   dVol(q,u,φ) = ∫(-1/vol_D*q*(DH ∘ φ)*(norm ∘ ∇(φ)))dΩ
 
@@ -86,7 +75,7 @@ function problem_from_physics(θ, ::Val{:thermal})
   l_hilb(q,φ) = ∫(q*φ)dΩ
   filter = AffineFEStateMap(a_hilb,l_hilb,V_φ,V_φ,V_φ,diff_order=2)
 
-  φh = interpolate(initial_lsf(4,0.2),V_φ)
+  φh = interpolate(initial_lsf(ξ_ls,0.2),V_φ)
   writevtk(Ω,"data/initial",cellfields=["φh"=>φh])
 
   V_reg = TestFESpace(model,reffe_scalar;dirichlet_tags=["Gamma_N"])
@@ -94,10 +83,10 @@ function problem_from_physics(θ, ::Val{:thermal})
   vel_ext = VelocityExtension((p,q)->a_hilb(p,q,φh),U_reg,V_reg)
 
   p0 = φh.free_values
-  optimisation_problem = OptimisationProblem(pcfs,filter,ls_evo,interp,p0)
+  optimisation_problem = OptimisationProblem(pcfs,filter,vel_ext,ls_evo,interp,p0)
 
 #   ## Optimiser
-#   optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,φh;
+#   optimiser = AugmentedLagr4angian(pcfs,ls_evo,vel_ext,φh;
 #     γ,verbose=true,constraint_names=[:Vol])
 #   for (it,uh,φh) in optimiser
 #     data = ["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh]

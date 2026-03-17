@@ -1,5 +1,6 @@
 function saverun(θ,problem,result,sname)
 	state_map = result.state_map
+	filter = problem.filter
 	φ = result.φ
 	trace = result.trace
 	H = problem.interp.H
@@ -10,12 +11,12 @@ function saverun(θ,problem,result,sname)
 	U = get_trial_space(state_map)
 	V = get_test_space(state_map)
 	Ω = get_triangulation(V_φ)
-	φh = FEFunction(V_φ,φ)
+	φh_filtered = FEFunction(V_φ,filter(φ))
 	uh = get_state(state_map)
 	vtu_data = [
 		"uh" => uh, 
-		"φh" => φh,
-		"Hφ" => H∘φh,
+		"φh_filtered" => φh_filtered,
+		"Hφ_filtered" => H∘φh_filtered,
 		]	
 	opt_results = Dict{String,Any}(
 		"trace" => result.trace,
@@ -27,7 +28,6 @@ function saverun(θ,problem,result,sname)
 	results_directory = joinpath(DrWatson.datadir("sims_raw"), model_name)
 	mkpath(results_directory)
 	results_dict = Dict{String,Any}(string(k) => v for (k, v) in merge(θ, opt_results))
-	@show results_dict
 	tagsave(joinpath(results_directory,sname), results_dict, storepatch = true)
 	println("finished")
 	return true	
