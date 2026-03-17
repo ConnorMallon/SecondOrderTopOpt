@@ -50,6 +50,11 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{2})
   constraint = construct_second_order_objective(pcfs.C[1])
   @assert length(pcfs.C) == 1 "Only one constraint is currently supported in Optim_KrylovTrustRegion optimiser."
 
+
+
+
+  
+
   # Trust region Newton-CG with Optim.jl
   i=0
   T = typeof(φ)
@@ -112,19 +117,26 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{1})
   @show vel_ext = optimisation_problem.vel_ext
   ls_evo = optimisation_problem.ls_evo
   φ = optimisation_problem.φ
-
-  J = pcfs.J
-  C = pcfs.C
-
+  # J = pcfs.J
+  # C = pcfs.C
   γ = θ["γ"]
+  λ = θ["λ"]
 
+  function φ_to_jc(φ)
+    u = pcfs.state_map(φ)
+    j = pcfs.J(u,φ)
+    c = pcfs.C[1](u,φ)
+    j+λ*c
+  end
+
+  pcfs_L = CustomPDEConstrainedFunctionals(φ_to_jc,0;pcfs.state_map)
   ph = FEFunction(get_aux_space(pcfs.state_map),φ)
-  optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,ph;
-    γ,verbose=true,constraint_names=[:Vol])
+  optimiser = AugmentedLagrangian(pcfs_L,ls_evo,vel_ext,ph;
+    γ,verbose=true,constraint_names=[])
   trace = []
   for (it,uh,φh) in optimiser
-    j = J(uh,φh)
-    c = C[1](uh,φh)
+    j = pcfs.J(uh,φh)
+    c = pcfs.C[1](uh,φh)
     push!(trace, j+c)
     #data = ["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh]
     #iszero(it % iter_mod) && writevtk(Ω,path*"out$it",cellfields=data)
