@@ -17,6 +17,7 @@ function saverun(θ,problem,result,sname)
 		"uh" => uh, 
 		"φh_filtered" => φh_filtered,
 		"Hφ_filtered" => H∘φh_filtered,
+		"Hφ" => H∘(FEFunction(V_φ,φ)),
 		]	
 	opt_results = Dict{String,Any}(
 		"trace" => result.trace,
