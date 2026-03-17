@@ -3,6 +3,7 @@ function problem_from_physics(θ, ::Val{:elastic})
   η_coeff = θ["η_coeff"]
   α_factor = θ["α_coeff"]
   ξ_ls = θ["ξ_ls"]
+  γ = θ["γ"]
 
   ## Parameters
   order = 1
@@ -10,7 +11,6 @@ function problem_from_physics(θ, ::Val{:elastic})
   prop_Γ_N = 0.2
   dom = (0,xmax,0,ymax)
   el_size = (2*n,n)
-  γ = 0.1
   γ_reinit = 0.5
   max_steps = floor(Int,order*minimum(el_size)/10)
   tol = 1/(5order^2)/minimum(el_size)
@@ -79,7 +79,7 @@ function problem_from_physics(θ, ::Val{:elastic})
   vel_ext = VelocityExtension((p,q)->a_hilb(p,q,φh),U_reg,V_reg)
 
   p0 = φh.free_values
-  optimisation_problem = OptimisationProblem(pcfs,filter,ls_evo,interp,p0)
+  optimisation_problem = OptimisationProblem(pcfs,filter,vel_ext,ls_evo,interp,p0)
 
   return optimisation_problem
 end

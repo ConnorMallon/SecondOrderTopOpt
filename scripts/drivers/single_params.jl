@@ -10,18 +10,18 @@ model_square = "testing"
 sweep_params = 	Dict{String,Any}(
 )
 fixed_params = Dict{String,Any}(
-	"model_name" => "test_case_3",
-	"n" => 30,
-	"η_coeff" => 5.0,
-	"α_coeff" => 2.0,
+	"model_name" => "1st_order_tests",
+	"n" => 100,
+	"η_coeff" => 2.0,
+	"α_coeff" => 1.0,
 	"initial_radius" => 1.0,
 	"cg_tol" => 0.01,
 	"rho_upper" => 0.75,
-	"max_iters" => 20,
+	"max_iters" => 100,
 	"γ" => 0.1,
 	"ξ_ls" => 4,
 	"physics" => "thermal",
-	"opt_order" => 2,
+	"opt_order" => 1,
 	)
 job_id = 0
 job_array_id = 1 

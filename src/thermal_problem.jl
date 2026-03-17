@@ -3,6 +3,7 @@ function problem_from_physics(θ, ::Val{:thermal})
   η_coeff = θ["η_coeff"]
   α_factor = θ["α_coeff"]
   ξ_ls = θ["ξ_ls"]
+  γ = θ["γ"]
 
   ## Parameters
   order = 1
@@ -11,7 +12,6 @@ function problem_from_physics(θ, ::Val{:thermal})
   prop_Γ_D = 0.2
   dom = (0,xmax,0,ymax)
   el_size = (n,n)
-  γ = 0.1
   γ_reinit = 0.5
   max_steps = floor(Int,order*minimum(el_size)/10)
   tol = 1/(5order^2)/minimum(el_size)
@@ -52,7 +52,7 @@ function problem_from_physics(θ, ::Val{:thermal})
   κ =1.0
   a(u,v,φ) = ∫((I ∘ φ)*κ*∇(u)⋅∇(v))dΩ
   l(v,φ) = ∫(v)dΓ_N
-#
+  
   ## Setup solver and FE operators
   state_map = AffineFEStateMap(a,l,U,V,V_φ)
 
@@ -85,17 +85,17 @@ function problem_from_physics(θ, ::Val{:thermal})
   p0 = φh.free_values
   optimisation_problem = OptimisationProblem(pcfs,filter,vel_ext,ls_evo,interp,p0)
 
-#   ## Optimiser
-#   optimiser = AugmentedLagr4angian(pcfs,ls_evo,vel_ext,φh;
-#     γ,verbose=true,constraint_names=[:Vol])
-#   for (it,uh,φh) in optimiser
-#     data = ["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh]
-#     iszero(it % iter_mod) && writevtk(Ω,"data/out$it",cellfields=data)
-#     write_history(path*"/history.txt",optimiser.history)
-#   end
-#   it = get_history(optimiser).niter; uh = get_state(pcfs)
-#   writevtk(Ω,"data/tmpout$it",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh])
-# end
+  #   ## Optimiser
+  #   optimiser = AugmentedLagr4angian(pcfs,ls_evo,vel_ext,φh;
+  #     γ,verbose=true,constraint_names=[:Vol])
+  #   for (it,uh,φh) in optimiser
+  #     data = ["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh]
+  #     iszero(it % iter_mod) && writevtk(Ω,"data/out$it",cellfields=data)
+  #     write_history(path*"/history.txt",optimiser.history)
+  #   end
+  #   it = get_history(optimiser).niter; uh = get_state(pcfs)
+  #   writevtk(Ω,"data/tmpout$it",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh])
+  # end
 
   # optimiser = Optim_KrylovTrustRegion(pcfs,filter,ls_evo)
   # result = optimise(optimiser,φh.free_values)

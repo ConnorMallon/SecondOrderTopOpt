@@ -14,7 +14,12 @@ function save_job_dicts(sweep_params,fixed_params,job_id)
   DrWatson.save(datadir("results", "dict_vector", y), fixed_params)
 end
 
-function pbs_sweeper(sweep_params,fixed_params)
+function pbs_sweeper(sweep_params,fixed_params,pbs_params)
+  queue = pbs_params["queue"]
+  time = pbs_params["time"]
+  ncpus = pbs_params["ncpus"]
+  mem = pbs_params["mem"]
+
   job_id = rand(1:100000000)
   save_job_dicts(sweep_params,fixed_params,job_id)
 
@@ -37,17 +42,19 @@ for start_idx in 1:job_array_limit:array_length
 
   @show job_name
 
-  ncpus = 1
-  mem = 4*4 # GB
-  time = 24 # hours
+  #ncpus = 1
+  #mem = 4*4 # GB
+  #time = 6 # hours
 
   mem_string = "$(mem)G"
   hours_string = "$(time):00:00"
 
+  @show ncpus, mem, time , array_length
+
   job_cost = array_length*ncpus*(mem/4)*time*2
   println("cost of job (SU): ",job_cost) # 2 for normal queue 
 
-  if job_cost > 40000
+  if job_cost > 90000
       @show job_cost
       error("job cost too high, exiting")
   end
@@ -61,7 +68,7 @@ for start_idx in 1:job_array_limit:array_length
   #PBS -o /dev/null
   #PBS -e /dev/null
   #
-  #PBS -l walltime=24:00:00
+  #PBS -l walltime=6:00:00
   #
   #PBS -l mem=$mem_string
   #PBS -l ncpus=$ncpus
@@ -69,6 +76,7 @@ for start_idx in 1:job_array_limit:array_length
   #PBS -J $start_idx-$end_idx
   #
   #PBS -r y
+  #PBS -q $queue
 
   output_file="$(std_root_path2)/file-\${PBS_JOBID}.ext1"
   error_file="$(std_root_path2)/file-\${PBS_JOBID}.ext2"

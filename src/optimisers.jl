@@ -107,23 +107,30 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{2})
 end
 
 function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{1})
-  pcfs, filter , vel_ext, ls_evo, φ  = optimisation_problem.pcfs, optimisation_problem.filter, optimisation_problem.vel_ext, optimisation_problem.ls_evo, optimisation_problem.φ
-  γ = θ["γ"]
+  pcfs = optimisation_problem.pcfs
+  # filter = optimisation_problem.filter
+  @show vel_ext = optimisation_problem.vel_ext
+  ls_evo = optimisation_problem.ls_evo
+  φ = optimisation_problem.φ
 
-  vel_ext = 
+  J = pcfs.J
+  C = pcfs.C
+
+  γ = θ["γ"]
 
   ph = FEFunction(get_aux_space(pcfs.state_map),φ)
   optimiser = AugmentedLagrangian(pcfs,ls_evo,vel_ext,ph;
     γ,verbose=true,constraint_names=[:Vol])
+  trace = []
   for (it,uh,φh) in optimiser
+    j = J(uh,φh)
+    c = C[1](uh,φh)
+    push!(trace, j+c)
     #data = ["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh]
     #iszero(it % iter_mod) && writevtk(Ω,path*"out$it",cellfields=data)
     #write_history(path*"/history.txt",optimiser.history)
   end
   #it = get_history(optimiser).niter; uh = get_state(pcfs)
   #writevtk(Ω,path*"out$it",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh])
-  result = ()
-  return result
+  return Result(pcfs.state_map, trace, ph.free_values)
 end
-
-
