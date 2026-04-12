@@ -1,0 +1,119 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global}
+    \entry{Biegler2003}{article}{}
+      \name{author}{4}{}{%
+        {{hash=b4cf951e494c45f4de462df04ec3b5df}{%
+           family={Biegler},
+           familyi={B\bibinitperiod},
+           given={Lorenz\bibnamedelima T.},
+           giveni={L\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+        {{hash=d7eed263e7b519549a0b143f5c8de44d}{%
+           family={Heinkenschloss},
+           familyi={H\bibinitperiod},
+           given={Matthias},
+           giveni={M\bibinitperiod}}}%
+        {{hash=22065f81400c65112a5f97f91a7b008b}{%
+           family={Ghattas},
+           familyi={G\bibinitperiod},
+           given={Omar},
+           giveni={O\bibinitperiod}}}%
+        {{hash=a270992c0fd5819d1c13d3af78ff1d31}{%
+           family={Waanders},
+           familyi={W\bibinitperiod},
+           given={Bart\bibnamedelima Bloemen},
+           giveni={B\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Springer Berlin Heidelberg}%
+      }
+      \strng{namehash}{55ed90bf0cda0b49b4d651969e95402d}
+      \strng{fullhash}{37f2be35522c6a1c7fc8dbd880d0f347}
+      \strng{bibnamehash}{55ed90bf0cda0b49b4d651969e95402d}
+      \strng{authorbibnamehash}{55ed90bf0cda0b49b4d651969e95402d}
+      \strng{authornamehash}{55ed90bf0cda0b49b4d651969e95402d}
+      \strng{authorfullhash}{37f2be35522c6a1c7fc8dbd880d0f347}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{isbn}{9783642555084}
+      \field{issn}{1439-7358}
+      \field{journaltitle}{Lecture Notes in Computational Science and Engineering}
+      \field{title}{Large-Scale PDE-Constrained Optimization}
+      \field{year}{2003}
+      \verb{doi}
+      \verb 10.1007/978-3-642-55508-4
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1007/978-3-642-55508-4
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1007/978-3-642-55508-4
+      \endverb
+    \endentry
+    \entry{Badia2020}{article}{}
+      \name{author}{2}{}{%
+        {{hash=e8a243d078bfdade6791201f05f86214}{%
+           family={Badia},
+           familyi={B\bibinitperiod},
+           given={Santiago},
+           giveni={S\bibinitperiod}}}%
+        {{hash=c763b2408349becf8527b072583f5d76}{%
+           family={Verdugo},
+           familyi={V\bibinitperiod},
+           given={Francesc},
+           giveni={F\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {The Open Journal}%
+      }
+      \strng{namehash}{6d10c69fe0f5ef42c77f353ca97378f1}
+      \strng{fullhash}{6d10c69fe0f5ef42c77f353ca97378f1}
+      \strng{bibnamehash}{6d10c69fe0f5ef42c77f353ca97378f1}
+      \strng{authorbibnamehash}{6d10c69fe0f5ef42c77f353ca97378f1}
+      \strng{authornamehash}{6d10c69fe0f5ef42c77f353ca97378f1}
+      \strng{authorfullhash}{6d10c69fe0f5ef42c77f353ca97378f1}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Open Source Software}
+      \field{number}{52}
+      \field{title}{Gridap: An extensible Finite Element toolbox in Julia}
+      \field{volume}{5}
+      \field{year}{2020}
+      \field{pages}{2520}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.21105/joss.02520
+      \endverb
+      \verb{urlraw}
+      \verb https://doi.org/10.21105/joss.02520
+      \endverb
+      \verb{url}
+      \verb https://doi.org/10.21105/joss.02520
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

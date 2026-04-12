@@ -1,0 +1,11 @@
+\section{Introduction}
+
+Newton methods can often converge faster than gradient-based methods by exploiting second-order information. In this work, we investigate Newton-based methods for level set topology optimization. Although such methods have been studied in topology optimization, they have not seen widespread adoption.
+
+For density based methods, improved convergence properties by using exact hessian information in an SQP algorithm has been shown \cite{RojasLabanda2016,RojasLabanda2017}. The authors note that the solving the subproblem is expensive. They do, however show promise of the use of second order information for accelerated convergence in the non-convex optimization landscape of topology optimization problems. It is also not clear how to extend this method beyond compliance minimization problems.
+
+For level set methods, newton-based methods are less studied. In the optimize then discretize setting, improved convergence properties have once again been shown by using full hessians on a few problems \cite{Allaire2016} by considering normal boundary perturbations for simple topology optimisation problems.
+Similar results are shown for basic shape recoveries in boundary fitted settings \cite{Gangl2020,Etling2018} by using second order shape derivatives. 
+
+A well known issue with newton methods is that they can require many iterations to converge if the initial guess is not close to the solution. Homotopy methods have been proposed to mitigate this issue by gradually transforming a convex problem into the original problem, allowing the solution to be tracked along the way. This is used in a level-set context by \cite{Gangl2024} and in a density context by \cite{Papadopoulos2021}. These methods, however require problem specific tuning of the continuation parameters. 
+The method that we propose in this work is a reparametrisation of the design space which allows superlinear convergence in early iterations without the need for continuation.

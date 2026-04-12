@@ -1,46 +1,46 @@
 \section{optimisation}
 
-We propose here an inexact CG-newton method using the ALM for constraint handling. 
-Consider first the taylor series expansion of a function \( f:\mathbb{R}^n \rightarrow \mathbb{R} \) around a point \( x_k \):
+We propose here an inexact CG-newton method for solving the optimisation problem: %using the ALM for constraint handling. 
 \begin{equation}
-f(x_k + p_k)
-= f(x_k)
-+ \nabla f(x_k)^{\top} p_k
-+ \frac{1}{2} p_k^{\top} \nabla^{2} f(x_k) p_k
-+ \mathcal{O}(\vert p_k \vert^{3}).
+\min_{p} \hat J(p),
 \end{equation}
-Ignoring the $\mathcal{O}(\vert p_k \vert^{3})$ terms, we find $p_k$ that minimises this quadratic expression by setting its gradient with respect to $p_k$ to zero to obtain the Newton equation:
+where
 \begin{equation}
-\nabla^{2} f(x_k) p_k = - \nabla f(x_k).
+    \hat J(p) = J(u(p),p).
 \end{equation}
-To avoid forming the full hessian matrix, we use the CG method to iteratively solve this system, which instead only requires the hessian-vector product \( \nabla^{2} f(x_k) v \) for some vector \( v \). 
-We want to choose an appropriate forcing sequence $\eta_k$ to terminate the CG iterations when the residual \( r_k = \nabla^{2} f(x_k) p_k + \nabla f(x_k) \) satisfies:
+Consider first the taylor series expansion of the objective \( \hat J \) around a point \( p_k \):
 \begin{equation}
-\| r_k \|_2 \leq \eta_k \| \nabla f(x_k) \|_2.
+\hat J(p_k + \tilde{p}_k)
+= \hat J(p_k)
++ \frac{d\hat J}{dp}(p_k)^{\top} \tilde{p}_k
++ \frac{1}{2} \tilde{p}_k^{\top} H(p_k) \tilde{p}_k
++ \mathcal{O}(\vert \tilde{p}_k \vert^{3}).
+\end{equation}
+Ignoring the $\mathcal{O}(\vert \tilde{p}_k \vert^{3})$ terms, we find $\tilde{p}_k$ that minimises this quadratic expression by setting its gradient with respect to $\tilde{p}_k$ to zero to obtain the Newton equation:
+\begin{equation}
+H(p_k)\tilde{p}_k = - \frac{d\hat J}{dp}(p_k).
+\end{equation}
+To avoid forming the full hessian matrix, we use the CG method to iteratively solve this system, which instead only requires the hessian-vector product \( H(p_k) v \) for some vector \( v \). 
+We want to choose an appropriate forcing sequence $\eta_k$ to terminate the CG iterations when the residual \( r_k = H(p_k)\tilde{p}_k + \frac{d\hat J}{dp}(p_k) \) satisfies:
+\begin{equation}
+\| r_k \|_2 \leq \eta_k \left\| \frac{d\hat J}{dp}(p_k) \right\|_2.
 \end{equation}
 We use the choice: 
 \begin{equation}
-\eta_k = \min \left( 0.5, \sqrt{\Vert \nabla f(x_k) \Vert  } \right).
+\eta_k = \min \left( 0.5, \sqrt{\left\Vert \frac{d\hat J}{dp}(p_k) \right\Vert} \right).
 \end{equation}
-We can prove (see e.g. \cite{nocedal2006numerical}) that choosing $\eta_k = O(\Vert \nabla f(x_k) \Vert)$ leads to linear convergence for the iterations:
+We can prove (see e.g. \cite{nocedal2006numerical}) that choosing $\eta_k = O\left(\left\Vert \frac{d\hat J}{dp}(p_k) \right\Vert\right)$ leads to linear convergence for the iterations:
 \begin{equation}
-    \Vert \nabla f(x_{k+1}) \Vert \leq C \Vert \nabla f(x_k) \Vert,
+    \left\Vert \frac{d\hat J}{dp}(p_{k+1}) \right\Vert \leq C \left\Vert \frac{d\hat J}{dp}(p_k) \right\Vert,
 \end{equation}
-and that choosing $\eta_k = O(\Vert \nabla f(x_k) \Vert^2)$ leads to quadratic (local) convergence:
+and that choosing $\eta_k = O\left(\left\Vert \frac{d\hat J}{dp}(p_k) \right\Vert^2\right)$ leads to quadratic (local) convergence:
 \begin{equation}
-    \Vert \nabla f(x_{k+1}) \Vert \leq C \Vert \nabla f(x_k) \Vert^2.
+    \left\Vert \frac{d\hat J}{dp}(p_{k+1}) \right\Vert \leq C \left\Vert \frac{d\hat J}{dp}(p_k) \right\Vert^2.
 \end{equation}
 albeit this tighter restriction may require too many CG iterations. The chosen $\eta_k$ is a compromise between these two extremes. 
 Since the matrix is not necessarily positive definite, we also terminate if a direction of negative curvature is found \cite{nocedal2006numerical}.
 \begin{equation}
-p_k^T \nabla^{2} f(x_k) p_k < 0.
+\tilde{p}_k^T H(p_k)\tilde{p}_k < 0.
 \end{equation}
-To avoid large numbers of CG iterations, we use a preconditioner. We use a regularisation preconditioner.
-If we can show some sort of compactness of the operator for the objective function, which i think should be the case because only some of the parameters can actually effect the objective function - then we can state superlinear convergence of the CG iterations... 
-This would be huge i think.. 
 
-If we consider that an objective function of the form:
-\begin{equation}
-    J_reg(u,p) = J(u,p) + \frac{\alpha}{2} \int \Vert \nabla p \Vert^2 d\Omega
-\end{equation}
-And we simply precondition with the inverse of the stiffness matrix (im not sure what coefficiant we should use -- look this up...)
+
