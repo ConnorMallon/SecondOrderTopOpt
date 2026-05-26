@@ -278,6 +278,24 @@ writevtk(Ω,"jsc",cellfields=["φu"=>φh,"φ"=>FEFunction(V_φ,filter(result.min
 
 
 
+function J(p)
+	u1 = state_map_1(p)
+	j = objective_1(u1,p)
+	for i ∈ eachindex(I)
+		ui = state_map_i(p)
+		ji = objective_i(ui,p)
+		j += ji
+	end
+	j
+end
+
+
+val_grad(J,p)
+
+HVP(J,p,p̃)
+
+
+
 
 
 end
