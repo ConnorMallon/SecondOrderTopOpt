@@ -2368,8 +2368,8 @@
     <bcf:citekey order="3" intorder="2">Etling2018</bcf:citekey>
     <bcf:citekey order="4" intorder="1">Gangl2024</bcf:citekey>
     <bcf:citekey order="5" intorder="1">Papadopoulos2021</bcf:citekey>
-    <bcf:citekey order="6" intorder="1">nocedal2006numerical</bcf:citekey>
-    <bcf:citekey order="7" intorder="1">nocedal2006numerical</bcf:citekey>
+    <bcf:citekey order="6" intorder="1">NocedalWright2006</bcf:citekey>
+    <bcf:citekey order="7" intorder="1">NocedalWright2006</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

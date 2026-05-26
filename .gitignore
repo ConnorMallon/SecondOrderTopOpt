@@ -2,3 +2,9 @@
 *.vtu
 /_tmp/*
 /data/*
+*.aux
+*.bcf
+*.blg
+*.bbl
+*.log
+*.out

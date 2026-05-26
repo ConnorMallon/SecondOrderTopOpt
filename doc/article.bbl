@@ -366,8 +366,45 @@
       \verb http://dx.doi.org/10.1137/20M1326209
       \endverb
     \endentry
+    \entry{NocedalWright2006}{book}{}
+      \name{author}{2}{}{%
+        {{hash=88a342d927bf795b0d92af8a5613da31}{%
+           family={Nocedal},
+           familyi={N\bibinitperiod},
+           given={Jorge},
+           giveni={J\bibinitperiod}}}%
+        {{hash=c49efb16d3fa7eef002cc3620d42ab8a}{%
+           family={Wright},
+           familyi={W\bibinitperiod},
+           given={Stephen\bibnamedelima J.},
+           giveni={S\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Springer New York}%
+      }
+      \strng{namehash}{5b8fd28f6245ae8b0af119560622fa4f}
+      \strng{fullhash}{5b8fd28f6245ae8b0af119560622fa4f}
+      \strng{bibnamehash}{5b8fd28f6245ae8b0af119560622fa4f}
+      \strng{authorbibnamehash}{5b8fd28f6245ae8b0af119560622fa4f}
+      \strng{authornamehash}{5b8fd28f6245ae8b0af119560622fa4f}
+      \strng{authorfullhash}{5b8fd28f6245ae8b0af119560622fa4f}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
+      \field{labelnamesource}{author}
+      \field{isbn}{9780387303031}
+      \field{journaltitle}{Springer Series in Operations Research and Financial Engineering}
+      \field{year}{2006}
+      \verb{doi}
+      \verb 10.1007/978-0-387-40065-5
+      \endverb
+      \verb{urlraw}
+      \verb http://dx.doi.org/10.1007/978-0-387-40065-5
+      \endverb
+      \verb{url}
+      \verb http://dx.doi.org/10.1007/978-0-387-40065-5
+      \endverb
+    \endentry
   \enddatalist
-  \missing{nocedal2006numerical}
 \endrefsection
 \endinput
 

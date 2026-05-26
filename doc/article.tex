@@ -174,15 +174,6 @@ urlcolor=blue           % color of external links
 \newcommand{\tnor}[1]{{\left\vert\kern-0.25ex\left\vert\kern-0.25ex\left\vert #1 
 \right\vert\kern-0.25ex\right\vert\kern-0.25ex\right\vert}}
 
-% The following commands are extracted from https://arxiv.org/format/1411.1607
-%\definecolor{shadecolor}{gray}{.92}
-%\definecolor{incolor}{rgb}{0,0,.7}
-%\definecolor{outcolor}{rgb}{.65,0,0}
-%\definecolor{syntaxcolor}{rgb}{.65,0,0}
-%\newcounter{jcounter}
-%\newenvironment{jinput}[1][]{\vspace{-0.2cm}\ttfamily\hspace*{-.0in}\noindent\begin{minipage}[t]{0.95\textwidth}\vskip-0ex\begin{shaded}}{\end{shaded}\vspace{0.1cm}\end{minipage}\par}
-%\newcommand{\sh}[1]{\textcolor{syntaxcolor}{#1}}
-
 % comments
 \newcommand{\sbcom}[1]{{\color{red}{***{SB: #1}***}}}
 \newcommand{\cmcom}[1]{{\color{red}{#1}}}
@@ -217,54 +208,10 @@ urlcolor=blue           % color of external links
 \newcommand{\mycomment}[1]{}
 
 \renewcommand{\multicitedelim}{\addcomma}
-
-\title[Adsorption System Topology Optimization]{Adsorption System Topology Optimization}
-
-%%=============================================================%%
-%% Prefix	-> \pfx{Dr}
-%% GivenName	-> \fnm{Joergen W.}
-%% Particle	-> \spfx{van der} -> surname prefix
-%% FamilyName	-> \sur{Ploeg}
-%% Suffix	-> \sfx{IV}
-%% NatureName	-> \tanm{Poet Laureate} -> Title after name
-%% Degrees	-> \dgr{MSc, PhD}
-%% \author*[1,2]{\pfx{Dr} \fnm{Joergen W.} \spfx{van der} \sur{Ploeg} \sfx{IV} \tanm{Poet Laureate} 
-%%                 \dgr{MSc, PhD}}\email{iauthor@gmail.com}
-%%=============================================================%%
-
-\author[]{Connor N. Mallon$^{1*}$}
-\author[]{Aaron W. Thornton$^{2}$}
-\author[]{Matthew R. Hill$^{1,2}$}
-\author[]{Nora Gr\"utering}
-\author[]{Santiago  Badia$^{3}$}
-\thanks{\null\ 
-$^{1}$ Department of Chemical and Biological Engineering, Monash University, Wellington Rd Clayton, 3800, Victoria, Australia.\ 
-$^{2}$ CSIRO, Research Way Clayton, 3168, Victoria, Australia,\ 
-$^{3}$ School of Mathematics, Monash University, Wellington Rd Clayton, 3800, Victoria, Australia.\ 
-$^*$ Corresponding authors\ 
-E-mails: {\tt connor.mallon@monash.edu} (Connor Mallon, Department of Chemical and Biological Engineering, Monash University, Wellington Rd Clayton, 3800, Victoria, Australia), {\tt santiago.badia@monash.edu} (Santiago Badia, School of Mathematics, Monash University, Wellington Rd Clayton, 3800, Victoria, Australia)}
-
-
-%%==================================%%
-%% sample for unstructured abstract %%
-%%==================================%%
-
-\begin{abstract}
-  The performance of swing adsorption systems is sensitive to the geometry of the adsorbent. To achieve feasibility for large-scale implementation of CO\textsubscript{2} direct air capture systems in line with the latest Intergovernmental Panel on Climate Change objectives
-  %\cite{IPCC2023}
-  , significant improvements to current adsorption systems must be made. In this study, we employ a topology optimization to the macrostructure of a swing adsorption bed and unveil a simple blunted cone design, which achieves an estimated cost range of \$49-116/t-CO\textsubscript{2} removed from the atmosphere for the system. This represents an improvement over the benchmark monolith design, %reported by \cite{Sinha2017}, 
-  which incurs a cost of \$75-140/t-CO\textsubscript{2} considering the same process parameters. 
-  %By optimizing the bed configuration, we demonstrate the potential for enhanced efficiency in adsorption systems.
-\end{abstract}
-
-%\keywords{neural, immersed, level set, topology optimization}
-
- % \maketitle
-    \input{introduction.tex}
-
-  \input{notes_opt.tex}
-  \input{notes.tex}
-
- \printbibliography 
+\input{experiments.tex}
+\input{introduction.tex}
+\input{notes_opt.tex}
+\input{notes.tex}
+\printbibliography 
 
 \end{document}

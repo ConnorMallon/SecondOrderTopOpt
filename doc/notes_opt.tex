@@ -29,7 +29,7 @@ We use the choice:
 \begin{equation}
 \eta_k = \min \left( 0.5, \sqrt{\left\Vert \frac{d\hat J}{dp}(p_k) \right\Vert} \right).
 \end{equation}
-We can prove (see e.g. \cite{nocedal2006numerical}) that choosing $\eta_k = O\left(\left\Vert \frac{d\hat J}{dp}(p_k) \right\Vert\right)$ leads to linear convergence for the iterations:
+We can prove (see e.g. \cite{NocedalWright2006}) that choosing $\eta_k = O\left(\left\Vert \frac{d\hat J}{dp}(p_k) \right\Vert\right)$ leads to linear convergence for the iterations:
 \begin{equation}
     \left\Vert \frac{d\hat J}{dp}(p_{k+1}) \right\Vert \leq C \left\Vert \frac{d\hat J}{dp}(p_k) \right\Vert,
 \end{equation}
@@ -38,7 +38,7 @@ and that choosing $\eta_k = O\left(\left\Vert \frac{d\hat J}{dp}(p_k) \right\Ver
     \left\Vert \frac{d\hat J}{dp}(p_{k+1}) \right\Vert \leq C \left\Vert \frac{d\hat J}{dp}(p_k) \right\Vert^2.
 \end{equation}
 albeit this tighter restriction may require too many CG iterations. The chosen $\eta_k$ is a compromise between these two extremes. 
-Since the matrix is not necessarily positive definite, we also terminate if a direction of negative curvature is found \cite{nocedal2006numerical}.
+Since the matrix is not necessarily positive definite, we also terminate if a direction of negative curvature is found \cite{NocedalWright2006}.
 \begin{equation}
 \tilde{p}_k^T H(p_k)\tilde{p}_k < 0.
 \end{equation}
