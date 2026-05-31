@@ -2361,15 +2361,6 @@
     <bcf:datasource type="file" datatype="bibtex" glob="false">bibliography.bib</bcf:datasource>
   </bcf:bibdata>
   <bcf:section number="0">
-    <bcf:citekey order="1" intorder="1">RojasLabanda2016</bcf:citekey>
-    <bcf:citekey order="1" intorder="2">RojasLabanda2017</bcf:citekey>
-    <bcf:citekey order="2" intorder="1">Allaire2016</bcf:citekey>
-    <bcf:citekey order="3" intorder="1">Gangl2020</bcf:citekey>
-    <bcf:citekey order="3" intorder="2">Etling2018</bcf:citekey>
-    <bcf:citekey order="4" intorder="1">Gangl2024</bcf:citekey>
-    <bcf:citekey order="5" intorder="1">Papadopoulos2021</bcf:citekey>
-    <bcf:citekey order="6" intorder="1">NocedalWright2006</bcf:citekey>
-    <bcf:citekey order="7" intorder="1">NocedalWright2006</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

@@ -187,18 +187,31 @@ urlcolor=blue           % color of external links
 
 \begin{document}
 
-% for including inkscape figs (save svg then compile - no need to export to pdf)
+
+% (1) unchanged
 \newcommand{\executeiffilenewer}[3]{%
-\ifnum\pdfstrcmp{\pdffilemoddate{#1}}%
-{\pdffilemoddate{#2}}>0%
-{\immediate\write18{#3}}\fi%
+  \ifnum\pdfstrcmp{\pdffilemoddate{#1}}%
+             {\pdffilemoddate{#2}}>0%
+    {\immediate\write18{#3}}%
+  \fi
 }
+
+% (2) add a space before each % so flags don’t get glued onto the filename
+\newcommand{\triggerexport}[2][1]{%
+  \executeiffilenewer{#2.svg}{#2.pdf}{%
+    inkscape -z -D --file=#2.svg % 
+      --export-pdf=#2.pdf % 
+      --export-latex % 
+      --export-area-page%
+  }%
+}
+
+% (3) call \triggerexport with the actual path, not \import@path
 \newcommand{\incfig}[2][1]{%
-\executeiffilenewer{#2.svg}{#2.pdf}%
-{inkscape -z -D --file=#2.svg %
---export-pdf=#2.pdf --export-latex}%
-\def\svgwidth{#1\linewidth}
-\input{#2.pdf_tex}%
+  \triggerexport[#1]{./figures/#2}%
+  \def\svgwidth{#1\linewidth*\real{1}}%
+  \large% ← change this to \large, \Huge, whatever you like
+  \subimport{./figures/}{#2.pdf_tex}%
 }
 
 % \newcommand{\incfig}[2][1]{%
@@ -208,10 +221,22 @@ urlcolor=blue           % color of external links
 \newcommand{\mycomment}[1]{}
 
 \renewcommand{\multicitedelim}{\addcomma}
-\input{experiments.tex}
-\input{introduction.tex}
-\input{notes_opt.tex}
-\input{notes.tex}
+
+\the\linewidth
+% \input{experiments.tex}
+% \input{introduction.tex}
+% \input{notes_opt.tex}
+% \input{notes.tex}
+
+\begin{figure}
+	\centering
+    \incfig[1.0]{graph}
+  \caption{There are far more connections to complete the computational graph - i.e. we need to include arrows from $\dot{u}$ to $\dot{\delta u}$}
+	\label{fig:topology-convergence}
+    % see fig_convergence.jl and fig_initial_topology.jl
+\end{figure}
+
+
 \printbibliography 
 
 \end{document}
