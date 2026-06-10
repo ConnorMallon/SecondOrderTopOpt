@@ -25,8 +25,8 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="1.8125004"
-     inkscape:cx="356.13786"
-     inkscape:cy="164.41376"
+     inkscape:cx="320.82752"
+     inkscape:cy="174.89651"
      inkscape:window-width="1916"
      inkscape:window-height="1161"
      inkscape:window-x="0"
@@ -73,6 +73,63 @@
          d="M 5.77,0 -2.88,5 V -5 Z"
          id="path135-5" />
     </marker>
+    <marker
+       style="overflow:visible"
+       id="TriangleStart-3"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="TriangleStart"
+       markerWidth="11.783895"
+       markerHeight="13.622999"
+       viewBox="0 0 5.3244081 6.1553851"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path135-6" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="TriangleStart-9"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="TriangleStart"
+       markerWidth="11.783895"
+       markerHeight="13.622999"
+       viewBox="0 0 5.3244081 6.1553851"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path135-1" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="TriangleStart-1-9"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="TriangleStart"
+       markerWidth="11.783895"
+       markerHeight="13.622999"
+       viewBox="0 0 5.3244081 6.1553851"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.5)"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:1pt"
+         d="M 5.77,0 -2.88,5 V -5 Z"
+         id="path135-5-3" />
+    </marker>
   </defs>
   <g
      inkscape:label="Layer 1"
@@ -82,45 +139,55 @@
        style="fill:#858585;fill-opacity:0.4;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        id="path238"
        cx="16.388609"
-       cy="25.299809"
+       cy="13.658135"
        r="5.2900229" />
     <circle
        style="fill:#858585;fill-opacity:0.4;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
        id="path238-3"
        cx="49.240654"
-       cy="25.299809"
+       cy="13.658135"
        r="5.2900229" />
     <path
        style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.193339;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart)"
-       d="M 21.651445,25.299809 H 27.488781 42.46282"
+       d="M 21.651445,13.658135 H 27.488781 42.46282"
        id="path7861"
        sodipodi:nodetypes="ccc" />
     <path
+       style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.193339;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart-3)"
+       d="M 0.95065243,51.67585 H 6.7879851 21.762022"
+       id="path7861-75"
+       sodipodi:nodetypes="ccc" />
+    <path
        style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.19384;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart)"
-       d="m 54.456378,25.299809 h 5.867618 15.05172"
+       d="m 54.456378,13.658135 h 5.867618 15.05172"
        id="path7861-3"
        sodipodi:nodetypes="ccc" />
     <path
        style="fill:#000000;fill-opacity:1;stroke:#18496a;stroke-width:0.193358;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart)"
-       d="m 87.41873,25.299809 h 5.838475 14.976955"
+       d="m 87.41873,13.658135 h 5.838475 14.976955"
        id="path7861-6"
        sodipodi:nodetypes="ccc" />
     <path
        style="fill:#000000;fill-opacity:1;stroke:#18496a;stroke-width:0.19384;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart)"
-       d="m 120.16101,25.299809 h 5.86761 15.05173"
+       d="m 120.16101,13.658135 h 5.86761 15.05173"
        id="path7861-1"
+       sodipodi:nodetypes="ccc" />
+    <path
+       style="fill:#000000;fill-opacity:1;stroke:#18496a;stroke-width:0.19384;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart-9)"
+       d="m 50.216669,51.67585 h 5.86761 15.05173"
+       id="path7861-1-2"
        sodipodi:nodetypes="ccc" />
     <circle
        style="fill:#858585;fill-opacity:0.4;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
        id="path238-3-3"
        cx="82.092697"
-       cy="25.299809"
+       cy="13.658135"
        r="5.2900229" />
     <circle
        style="fill:#2471a3;fill-opacity:0.4;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
        id="path238-3-2"
        cx="114.94474"
-       cy="25.299809"
+       cy="13.658135"
        r="5.2900229" />
     <text
        xml:space="preserve"
@@ -137,7 +204,7 @@
        style="fill:#2471a3;fill-opacity:0.4;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
        id="path238-3-9"
        cx="147.79678"
-       cy="25.299809"
+       cy="13.658135"
        r="5.2900229" />
     <text
        xml:space="preserve"
@@ -154,264 +221,291 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="15.05094"
-       y="26.413553"
+       y="14.771878"
        id="text33898"><tspan
          sodipodi:role="line"
          id="tspan33896"
          style="font-size:7.05556px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="15.05094"
-         y="26.413553">$p$</tspan></text>
+         y="14.771878">$p$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="26.884199"
-       y="22.067829"
+       y="10.426162"
        id="text33898-0"><tspan
          sodipodi:role="line"
          id="tspan33896-3"
          style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="26.884199"
-         y="22.067829"> ${u(p)}$</tspan></text>
+         y="10.426162"> ${u(p)}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="59.002934"
-       y="22.067829"
+       y="10.426162"
        id="text33898-0-6"><tspan
          sodipodi:role="line"
          id="tspan33896-3-1"
          style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="59.002934"
-         y="22.067829"> $J(u)$</tspan></text>
+         y="10.426162"> $J(u)$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="91.430069"
-       y="22.067829"
+       y="10.426162"
        id="text33898-0-0"><tspan
          sodipodi:role="line"
          id="tspan33896-3-6"
          style="font-size:3.175px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="91.430069"
-         y="22.067829"> $\delta J \frac{dJ}{du}$</tspan></text>
+         y="10.426162"> $\delta J \frac{dJ}{du}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="125.73454"
-       y="21.944057"
+       y="10.30239"
        id="text33898-0-0-0"><tspan
          sodipodi:role="line"
          id="tspan33896-3-6-6"
          style="font-size:3.175px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="125.73454"
-         y="21.944057"> $\delta{u} \frac{du}{dp}$</tspan></text>
+         y="10.30239"> $\delta{u} \frac{du}{dp}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="48.001301"
-       y="26.900387"
+       y="15.258711"
        id="text33898-2"><tspan
          sodipodi:role="line"
          id="tspan33896-9"
          style="font-size:7.05556px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="48.001301"
-         y="26.900387">$u$</tspan></text>
+         y="15.258711">$u$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="80.276695"
-       y="26.374748"
+       y="14.733073"
        id="text33898-3"><tspan
          sodipodi:role="line"
          id="tspan33896-1"
          style="font-size:7.05556px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="80.276695"
-         y="26.374748">$J$</tspan></text>
+         y="14.733073">$J$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.46944px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';display:inline;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="112.46786"
-       y="26.745165"
+       y="15.103488"
        id="text33898-9"><tspan
          sodipodi:role="line"
          id="tspan33896-4"
          style="font-size:2.46944px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="112.46786"
-         y="26.745165">$\delta u$</tspan></text>
+         y="15.103488">$\delta u$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="145.64294"
-       y="26.745165"
+       y="15.103488"
        id="text33898-9-4"><tspan
          sodipodi:role="line"
          id="tspan33896-4-5"
          style="font-size:7.05556px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="145.64294"
-         y="26.745165">$\delta p$</tspan></text>
+         y="15.103488">$\delta p$</tspan></text>
     <circle
-       style="fill:#a93226;fill-opacity:0.40000001;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#a93226;fill-opacity:0.4;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        id="path238-5"
        cx="16.246983"
-       cy="45.218559"
+       cy="33.576881"
        r="5.2900229" />
     <circle
-       style="fill:#a93226;fill-opacity:0.40000001;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#a93226;fill-opacity:0.4;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
        id="path238-3-4"
        cx="49.099033"
-       cy="45.218559"
+       cy="33.576881"
        r="5.2900229" />
     <path
        style="fill:#000000;fill-opacity:1;stroke:#a93226;stroke-width:0.193339;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart-1)"
-       d="m 21.509822,45.218557 h 5.83733 14.97404"
+       d="m 21.509822,33.576883 h 5.83733 14.97404"
        id="path7861-7"
        sodipodi:nodetypes="ccc" />
     <path
        style="fill:#000000;fill-opacity:1;stroke:#a93226;stroke-width:0.19384;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart-1)"
-       d="m 54.314752,45.218557 h 5.86762 15.05172"
+       d="m 54.314752,33.576883 h 5.86762 15.05172"
        id="path7861-3-6"
        sodipodi:nodetypes="ccc" />
     <path
        style="fill:#000000;fill-opacity:1;stroke:#a93226;stroke-width:0.193358;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart-1)"
-       d="m 87.277102,45.218557 h 5.83848 14.976948"
+       d="m 87.277102,33.576883 h 5.83848 14.976948"
        id="path7861-6-5"
        sodipodi:nodetypes="ccc" />
     <path
+       style="fill:#000000;fill-opacity:1;stroke:#a93226;stroke-width:0.193358;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart-1-9)"
+       d="m 99.774972,51.67585 h 5.838488 14.97695"
+       id="path7861-6-5-6"
+       sodipodi:nodetypes="ccc" />
+    <path
        style="fill:#000000;fill-opacity:1;stroke:#a93226;stroke-width:0.19384;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart-1)"
-       d="m 120.01938,45.218557 h 5.86761 15.05173"
+       d="m 120.01938,33.576883 h 5.86761 15.05173"
        id="path7861-1-6"
        sodipodi:nodetypes="ccc" />
     <circle
-       style="fill:#a93226;fill-opacity:0.40000001;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#a93226;fill-opacity:0.4;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
        id="path238-3-3-9"
        cx="81.951065"
-       cy="45.218559"
+       cy="33.576881"
        r="5.2900229" />
     <circle
-       style="fill:#a93226;fill-opacity:0.40000001;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#a93226;fill-opacity:0.4;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
        id="path238-3-2-3"
        cx="114.80312"
-       cy="45.218559"
+       cy="33.576881"
        r="5.2900229" />
     <circle
-       style="fill:#a93226;fill-opacity:0.40000001;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#a93226;fill-opacity:0.4;stroke:#000000;stroke-width:0.208585;stroke-dasharray:none;stroke-opacity:1"
        id="path238-3-9-7"
        cx="147.65517"
-       cy="45.218559"
+       cy="33.576881"
        r="5.2900229" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="14.909315"
-       y="46.332306"
+       y="34.690628"
        id="text33898-4"><tspan
          sodipodi:role="line"
          id="tspan33896-5"
          style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="14.909315"
-         y="46.332306">$\dot{p}$</tspan></text>
+         y="34.690628">$\dot{p}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="25.684238"
-       y="53.540062"
+       y="41.898384"
        id="text33898-0-2"><tspan
          sodipodi:role="line"
          id="tspan33896-3-5"
          style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="25.684238"
-         y="53.540062"> $\frac{d}{dp}(u)\dot{p}$</tspan></text>
+         y="41.898384"> $\frac{d}{dp}(u)\dot{p}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="57.273808"
-       y="53.540062"
+       y="41.898384"
        id="text33898-0-6-4"><tspan
          sodipodi:role="line"
          id="tspan33896-3-1-7"
          style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="57.273808"
-         y="53.540062"> $\frac{d}{du}(J)\dot{u}$</tspan></text>
+         y="41.898384"> $\frac{d}{du}(J)\dot{u}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="85.467598"
-       y="53.099091"
+       y="41.457413"
        id="text33898-0-0-4"><tspan
          sodipodi:role="line"
          id="tspan33896-3-6-4"
          style="font-size:3.175px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="85.467598"
-         y="53.099091">\small $ \frac{d}{d (\delta J)}( \delta J \frac{dJ}{du})\dot{\delta J}$</tspan></text>
+         y="41.457413">\small $ \frac{d}{d (\delta J)}( \delta J \frac{dJ}{du})\dot{\delta J}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.175px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="118.18458"
-       y="53.099091"
+       y="41.457413"
        id="text33898-0-0-0-3"><tspan
          sodipodi:role="line"
          id="tspan33896-3-6-6-0"
          style="font-size:3.175px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="118.18458"
-         y="53.099091">\small $ \frac{d}{d (\delta u)}( \delta u \frac{du}{dp})\dot{\delta u}$</tspan></text>
+         y="41.457413">\small $ \frac{d}{d (\delta u)}( \delta u \frac{du}{dp})\dot{\delta u}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="47.859669"
-       y="46.819138"
+       y="35.17746"
        id="text33898-2-7"><tspan
          sodipodi:role="line"
          id="tspan33896-9-8"
          style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="47.859669"
-         y="46.819138">$\dot{u}$</tspan></text>
+         y="35.17746">$\dot{u}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="80.135063"
-       y="46.293499"
+       y="34.651821"
        id="text33898-3-6"><tspan
          sodipodi:role="line"
          id="tspan33896-1-8"
          style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="80.135063"
-         y="46.293499">$\dot{J}$</tspan></text>
+         y="34.651821">$\dot{J}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.46944px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';display:inline;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="112.32623"
-       y="46.663918"
+       y="35.02224"
        id="text33898-9-8"><tspan
          sodipodi:role="line"
          id="tspan33896-4-4"
          style="font-size:2.46944px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="112.32623"
-         y="46.663918">$\dot{\delta u}$</tspan></text>
+         y="35.02224">$\dot{\delta u}$</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
        x="145.50133"
-       y="46.663918"
+       y="35.02224"
        id="text33898-9-4-3"><tspan
          sodipodi:role="line"
          id="tspan33896-4-5-1"
          style="font-size:7.05556px;fill:#000000;fill-opacity:1;stroke-width:0.2"
          x="145.50133"
-         y="46.663918">$\dot{\delta p}$</tspan></text>
+         y="35.02224">$\dot{\delta p}$</tspan></text>
+    <path
+       style="fill:#a93226;fill-opacity:0.4;stroke:#a93226;stroke-width:0.186782;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart)"
+       d="m 16.360169,18.957142 v 7.918683"
+       id="path59654" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.46944px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#2471a3;fill-opacity:0.4;stroke:#000000;stroke-width:0.2;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
-       x="155.1506"
-       y="12.033015"
-       id="text45160"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
+       x="23.961872"
+       y="52.639637"
+       id="text33898-0-2-6"><tspan
          sodipodi:role="line"
-         id="tspan45158"
-         style="stroke-width:0.2"
-         x="155.1506"
-         y="12.033015">s</tspan></text>
-    <path
-       style="fill:#a93226;fill-opacity:0.40000001;stroke:#a93226;stroke-width:0.186782;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart)"
-       d="m 16.360169,30.598816 v 7.918683"
-       id="path59654" />
+         id="tspan33896-3-5-2"
+         style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke-width:0.2"
+         x="23.961872"
+         y="52.639637">\small Primal Pass</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
+       x="73.970909"
+       y="52.608593"
+       id="text33898-0-2-6-7"><tspan
+         sodipodi:role="line"
+         id="tspan33896-3-5-2-0"
+         style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke-width:0.2"
+         x="73.970909"
+         y="52.608593">\small Reverse Pass</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:'Latin Modern Math';-inkscape-font-specification:'Latin Modern Math';fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-dasharray:none;stroke-opacity:1"
+       x="123.35854"
+       y="52.624115"
+       id="text33898-0-2-6-7-0"><tspan
+         sodipodi:role="line"
+         id="tspan33896-3-5-2-0-6"
+         style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke-width:0.2"
+         x="123.35854"
+         y="52.624115">\small Forward-over-Reverse Pass</tspan></text>
   </g>
 </svg>

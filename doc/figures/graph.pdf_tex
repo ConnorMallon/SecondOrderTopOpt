@@ -54,26 +54,28 @@
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{graph.pdf}}%
-    \put(0.09371037,0.19552301){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$p$\end{tabular}}}}%
-    \put(0.16738677,0.22258042){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} ${u(p)}$\end{tabular}}}}%
-    \put(0.36736487,0.22258042){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $J(u)$\end{tabular}}}}%
-    \put(0.56926315,0.22258042){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $\delta J \frac{dJ}{du}$\end{tabular}}}}%
-    \put(0.78285013,0.22335105){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $\delta{u} \frac{du}{dp}$\end{tabular}}}}%
-    \put(0.29886636,0.19249188){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$u$\end{tabular}}}}%
-    \put(0.49981986,0.19576462){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$J$\end{tabular}}}}%
-    \put(0.70024891,0.19345833){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\delta u$\end{tabular}}}}%
-    \put(0.90680409,0.19345833){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\delta p$\end{tabular}}}}%
+    \put(0.09371037,0.26800657){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$p$\end{tabular}}}}%
+    \put(0.16738677,0.29506393){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} ${u(p)}$\end{tabular}}}}%
+    \put(0.36736487,0.29506393){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $J(u)$\end{tabular}}}}%
+    \put(0.56926315,0.29506393){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $\delta J \frac{dJ}{du}$\end{tabular}}}}%
+    \put(0.78285013,0.29583456){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $\delta{u} \frac{du}{dp}$\end{tabular}}}}%
+    \put(0.29886636,0.26497544){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$u$\end{tabular}}}}%
+    \put(0.49981986,0.26824818){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$J$\end{tabular}}}}%
+    \put(0.70024891,0.2659419){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\delta u$\end{tabular}}}}%
+    \put(0.90680409,0.2659419){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\delta p$\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{graph.pdf}}%
-    \put(0.09282858,0.0715046){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\dot{p}$\end{tabular}}}}%
-    \put(0.15991556,0.02662757){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $\frac{d}{dp}(u)\dot{p}$\end{tabular}}}}%
-    \put(0.35659896,0.02662757){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $\frac{d}{du}(J)\dot{u}$\end{tabular}}}}%
-    \put(0.53213953,0.02937315){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\small $ \frac{d}{d (\delta J)}( \delta J \frac{dJ}{du})\dot{\delta J}$\end{tabular}}}}%
-    \put(0.73584244,0.02937315){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\small $ \frac{d}{d (\delta u)}( \delta u \frac{du}{dp})\dot{\delta u}$\end{tabular}}}}%
-    \put(0.29798452,0.06847348){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\dot{u}$\end{tabular}}}}%
-    \put(0.49893803,0.07174622){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\dot{J}$\end{tabular}}}}%
-    \put(0.69936713,0.06943992){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\dot{\delta u}$\end{tabular}}}}%
-    \put(0.90592236,0.06943992){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\dot{\delta p}$\end{tabular}}}}%
-    \put(0.96600082,0.28505931){\color[rgb]{0.14117647,0.44313725,0.63921569}\transparent{0.40000001}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}s\end{tabular}}}}%
+    \put(0.09282858,0.14398818){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\dot{p}$\end{tabular}}}}%
+    \put(0.15991556,0.09911115){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $\frac{d}{dp}(u)\dot{p}$\end{tabular}}}}%
+    \put(0.35659896,0.09911115){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $\frac{d}{du}(J)\dot{u}$\end{tabular}}}}%
+    \put(0.53213953,0.10185673){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\small $ \frac{d}{d (\delta J)}( \delta J \frac{dJ}{du})\dot{\delta J}$\end{tabular}}}}%
+    \put(0.73584244,0.10185673){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\small $ \frac{d}{d (\delta u)}( \delta u \frac{du}{dp})\dot{\delta u}$\end{tabular}}}}%
+    \put(0.29798452,0.14095706){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\dot{u}$\end{tabular}}}}%
+    \put(0.49893803,0.1442298){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\dot{J}$\end{tabular}}}}%
+    \put(0.69936713,0.14192349){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\dot{\delta u}$\end{tabular}}}}%
+    \put(0.90592236,0.14192349){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\dot{\delta p}$\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=3]{graph.pdf}}%
+    \put(0.14919174,0.03223381){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\small Primal Pass\end{tabular}}}}%
+    \put(0.46055869,0.0324271){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\small Reverse Pass\end{tabular}}}}%
+    \put(0.76805665,0.03233045){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\small Forward-over-Reverse Pass\end{tabular}}}}%
   \end{picture}%
 \endgroup%
