@@ -11,12 +11,12 @@ function saverun(θ,problem,result,sname)
 	U = get_trial_space(state_map)
 	V = get_test_space(state_map)
 	Ω = get_triangulation(V_φ)
-	φh_filtered = FEFunction(V_φ,filter(φ))
+	#φh_filtered = FEFunction(V_φ,filter(φ))
 	uh = get_state(state_map)
 	vtu_data = [
 		"uh" => uh, 
-		"φh_filtered" => φh_filtered,
-		"Hφ_filtered" => H∘φh_filtered,
+		#"φh_filtered" => φh_filtered,
+		#"Hφ_filtered" => H∘φh_filtered,
 		"Hφ" => H∘(FEFunction(V_φ,φ)),
 		]	
 	opt_results = Dict{String,Any}(

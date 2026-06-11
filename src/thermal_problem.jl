@@ -76,7 +76,11 @@ function problem_from_physics(θ, ::Val{:thermal})
   filter = AffineFEStateMap(a_hilb,l_hilb,V_φ,V_φ,V_φ,diff_order=2)
 
   φh = interpolate(initial_lsf(ξ_ls,0.2),V_φ)
+  @show sum(φh.free_values)
   writevtk(Ω,"data/initial",cellfields=["φh"=>φh])
+  reinit!(ls_evo,φh)
+  @show sum(φh.free_values)
+  writevtk(Ω,"data/initial2",cellfields=["φh"=>φh])
 
   V_reg = TestFESpace(model,reffe_scalar;dirichlet_tags=["Gamma_N"])
   U_reg = TrialFESpace(V_reg,0)

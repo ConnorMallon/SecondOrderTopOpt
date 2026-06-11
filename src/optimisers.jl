@@ -51,33 +51,44 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{2})
   @assert length(pcfs.C) == 1 "Only one constraint is currently supported in Optim_KrylovTrustRegion optimiser."
 
 
-
-
   
 
   # Trust region Newton-CG with Optim.jl
   i=0
+  
+  φ_ = filter(φ)
+  u = state_map(φ_)
+  j = objective(u,φ_)
+  c = constraint(u,φ_)
+  @show j+c
+  trace0 = [j+c]
+  writevtk(get_triangulation(get_aux_space(state_map)),"/scratch/ek63/cm8825/SecondOrderTopOpt/data/φ2hf_0",cellfields=["Iφh_unfiltered"=>optimisation_problem.interp.I∘FEFunction(get_aux_space(state_map),φ),"Iφh"=>optimisation_problem.interp.I∘FEFunction(get_aux_space(state_map),φ_),"uh"=>FEFunction(get_trial_space(state_map),u)])
+  dadad
   T = typeof(φ)
   function f(φ)
-    Zygote.ignore() do
-      if typeof(φ) == T # avoiding trying to reinit when φ is a dual
-        println("reinitialising")
-        φh = FEFunction(get_aux_space(state_map),φ) 
-        #reinit!(ls_evo,φh)
-      end
-    end
-    φ_ = filter(φ)
-    u = state_map(φ_)
     # Zygote.ignore() do
-    #   if typeof(x) == typeof(p)
+    #   if typeof(φ) == T # avoiding trying to reinit when φ is a dual
     #     i+=1
-    #     φh = FEFunction(get_aux_space(state_map),x) 
-    #     uh = FEFunction(get_trial_space(state_map),u)
-    #     writevtk(get_triangulation(get_aux_space(state_map)),"data/φh_$i",cellfields=["Iφh"=>I∘φh,"uh"=>uh])
+    #     if i % 10 == 0
+    #       println("reinitialising")
+    #       φh = FEFunction(get_aux_space(state_map),φ) 
+    #       #reinit!(ls_evo,φh)
+    #     end
     #   end
     # end
+    φ_ = filter(φ)
+    u = state_map(φ_)
+    Zygote.ignore() do
+      if typeof(φ) == T
+        i += 1
+        φh = FEFunction(get_aux_space(state_map),φ_) 
+        uh = FEFunction(get_trial_space(state_map),u)
+        writevtk(get_triangulation(get_aux_space(state_map)),"/scratch/ek63/cm8825/SecondOrderTopOpt/data/φhf_$i",cellfields=["Iφh"=>optimisation_problem.interp.I∘φh,"uh"=>uh])
+      end
+    end
     j = objective(u,φ_) 
     c = constraint(u,φ_)
+    @show j+c
     return j+c
   end
   function fg!(G,φ)
@@ -91,6 +102,7 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{2})
     copyto!(Hv, hv)
     Hv
   end
+  @show sum(φ)
   d = Optim.TwiceDifferentiableHV(f,fg!,hv!,φ)
   optim_result = Optim.optimize(d, φ, 
                           Optim.KrylovTrustRegion(
@@ -107,7 +119,7 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{2})
                                         ))
   φ = optim_result.minimizer
   val(optim_result) = optim_result.value
-	trace = val.(optim_result.trace)
+	trace = vcat(trace0,val.(optim_result.trace))
   return Result(state_map, trace, φ)
 end
 
@@ -121,8 +133,16 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{1})
   # C = pcfs.C
   γ = θ["γ"]
   λ = θ["λ"]
+  max_iters = θ["max_iters"]
 
   function φ_to_jc(φ)
+    u = pcfs.state_map(φ)
+    j = pcfs.J(u,φ)
+    c = pcfs.C[1](u,φ)
+    j+λ*c
+  end
+
+  function φ_to_jc2(φ)
     u = pcfs.state_map(φ)
     j = pcfs.J(u,φ)
     c = pcfs.C[1](u,φ)
@@ -132,17 +152,27 @@ function optimise(θ, optimisation_problem::OptimisationProblem, ::Val{1})
   pcfs_L = CustomPDEConstrainedFunctionals(φ_to_jc,0;pcfs.state_map)
   ph = FEFunction(get_aux_space(pcfs.state_map),φ)
   optimiser = AugmentedLagrangian(pcfs_L,ls_evo,vel_ext,ph;
-    γ,verbose=true,constraint_names=[])
-  trace = []
+    γ,verbose=true,constraint_names=[],maxiter=max_iters)
+  #trace = []
+  u0 = pcfs.state_map(φ)
+  uh0 = FEFunction(get_trial_space(pcfs.state_map),u0)
+  ph0 = FEFunction(get_aux_space(pcfs.state_map),φ)
+  writevtk(get_triangulation(get_aux_space(pcfs.state_map)),"/scratch/ek63/cm8825/SecondOrderTopOpt/data/φ1hf_0",cellfields=["Iφh"=>optimisation_problem.interp.I∘ph0,"uh"=>uh0])
+  trace = [pcfs.J(uh0,ph0) + pcfs.C[1](uh0,ph0)]
+  @show trace
+
   for (it,uh,φh) in optimiser
     j = pcfs.J(uh,φh)
     c = pcfs.C[1](uh,φh)
+    @show j+c
     push!(trace, j+c)
-    #data = ["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh]
-    #iszero(it % iter_mod) && writevtk(Ω,path*"out$it",cellfields=data)
+    data = ["φ"=>φh,"H(φ)"=>(optimisation_problem.interp.I ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh]
+    iszero(it % 10) && writevtk(get_triangulation(get_aux_space(pcfs.state_map)), "/scratch/ek63/cm8825/SecondOrderTopOpt/data/tmp1/out$γ$it", cellfields=data)
     #write_history(path*"/history.txt",optimiser.history)
   end
   #it = get_history(optimiser).niter; uh = get_state(pcfs)
   #writevtk(Ω,path*"out$it",cellfields=["φ"=>φh,"H(φ)"=>(H ∘ φh),"|∇(φ)|"=>(norm ∘ ∇(φh)),"uh"=>uh])
+
+  @show trace
   return Result(pcfs.state_map, trace, ph.free_values)
 end

@@ -22,10 +22,10 @@ push!(plot_traces, Config(
     name = "Newton-CG",
 ))
 
-model = "Testing_1st_order"
+model = "Testing_1st_order_6"#"Testing4_replication_reinit_initial"
 _results  = DrWatson.collect_results(results_path*model)
 @show _results.γ
-results = filter(r -> r.η_coeff == 5.0 && r.α_coeff == 4.0 && r.ξ_ls==5 && r.n == 200 && r.physics == "thermal", _results)
+results = filter(r -> r.η_coeff == 2.0 && r.α_coeff == 1.0 && r.ξ_ls==5 && r.physics == "thermal" && r.λ==1.0 && r.γ<0.4, _results)
 
 trace = results.trace
 γs = results.γ
@@ -40,6 +40,16 @@ for i in 1:min(length(γs), length(trace))
     ))
 end
 
+    # push!(plot_traces, Config(
+    #     x = 1:length(yi),
+    #     y = -1 .*(x),
+    #     type = "scatter",
+    #     mode = "lines+markers",
+    #     name = "$(γs[i])",
+    # ))
+
+
+
 p = Plot(
     plot_traces,
     Config(
@@ -48,6 +58,10 @@ p = Plot(
         yaxis = Config(title = Config(text = "y")),
     ),
 )
+p.layout.xaxis.range = [0, 50]
+# p.layout.yaxis.range = [0, 0.7]
+p.layout.yaxis.type = "log"
 
+p
 
 end
